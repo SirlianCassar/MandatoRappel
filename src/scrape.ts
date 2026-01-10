@@ -144,6 +144,22 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
 
     const collectedJson: any[] = [];
     const jsonUrls: string[] = [];
+    const xhrUrls: string[] = [];
+
+    const debugEnabled = process.env.DEBUG_SCRAPE === "1" || process.env.DEBUG_SCRAPE === "true";
+
+    page.on("request", (req) => {
+      try {
+        const rt = req.resourceType();
+        if (rt !== "xhr" && rt !== "fetch") return;
+        const url = req.url();
+        if (!/match|matches|schedule|event|events|esports|calendar|graphql|api/i.test(url)) return;
+        xhrUrls.push(url);
+      } catch {
+        // ignore
+      }
+    });
+
     page.on("response", async (res) => {
       try {
         const ct = res.headers()["content-type"] ?? "";
@@ -192,16 +208,33 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
     // 3) Fallback DOM très basique (moins fiable, mais mieux que rien)
     // On récupère le texte de la page et on tente de repérer un pattern "TEAM vs TEAM" proche d'une date.
     const pageText = (await page.textContent("body")) ?? "";
-    if (!pageText.toLowerCase().includes(params.teamName.toLowerCase())) return [];
+    if (!pageText.toLowerCase().includes(params.teamName.toLowerCase())) {
+      if (debugEnabled) {
+        const uniqueXhr = Array.from(new Set(xhrUrls));
+        const uniqueJson = Array.from(new Set(jsonUrls));
+        console.log(`[DEBUG] Requêtes XHR/fetch (match/schedule/api/graphql): ${uniqueXhr.length}`);
+        for (const u of uniqueXhr.slice(0, 40)) console.log(`[DEBUG] XHR ${u}`);
+        if (uniqueXhr.length > 40) console.log(`[DEBUG] ... +${uniqueXhr.length - 40} autres XHR`);
+
+        console.log(`[DEBUG] Réponses JSON capturées: ${uniqueJson.length}`);
+        for (const u of uniqueJson.slice(0, 40)) console.log(`[DEBUG] JSON ${u}`);
+        if (uniqueJson.length > 40) console.log(`[DEBUG] ... +${uniqueJson.length - 40} autres JSON`);
+      }
+      return [];
+    }
 
     // Impossible de garantir une extraction correcte sans structure; on préfère retourner vide
     // plutôt que de créer des événements erronés.
-    // Debug: si besoin, on imprime quelques URLs JSON vues pour aider à ajuster l’extraction.
-    if (process.env.DEBUG_SCRAPE === "1" || process.env.DEBUG_SCRAPE === "true") {
-      const unique = Array.from(new Set(jsonUrls));
-      console.log(`[DEBUG] JSON responses capturées: ${unique.length}`);
-      for (const u of unique.slice(0, 30)) console.log(`[DEBUG] ${u}`);
-      if (unique.length > 30) console.log(`[DEBUG] ... +${unique.length - 30} autres`);
+    if (debugEnabled) {
+      const uniqueXhr = Array.from(new Set(xhrUrls));
+      const uniqueJson = Array.from(new Set(jsonUrls));
+      console.log(`[DEBUG] Requêtes XHR/fetch (match/schedule/api/graphql): ${uniqueXhr.length}`);
+      for (const u of uniqueXhr.slice(0, 40)) console.log(`[DEBUG] XHR ${u}`);
+      if (uniqueXhr.length > 40) console.log(`[DEBUG] ... +${uniqueXhr.length - 40} autres XHR`);
+
+      console.log(`[DEBUG] Réponses JSON capturées: ${uniqueJson.length}`);
+      for (const u of uniqueJson.slice(0, 40)) console.log(`[DEBUG] JSON ${u}`);
+      if (uniqueJson.length > 40) console.log(`[DEBUG] ... +${uniqueJson.length - 40} autres JSON`);
     }
 
     return [];
