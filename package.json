@@ -1,0 +1,29 @@
+{
+  "name": "mandato-rappel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scrape Valorant Esports (MDR) et synchronise vers iCloud Calendar (CalDAV) via GitHub Actions.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.1",
+    "luxon": "^3.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/luxon": "^3.4.2",
+    "playwright": "^1.49.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
+
+

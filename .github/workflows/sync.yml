@@ -1,0 +1,55 @@
+name: Sync MDR matches to iCloud (CalDAV)
+
+on:
+  schedule:
+    # GitHub cron = UTC. Pour couvrir l'heure d'été/hiver Europe/Paris,
+    # on déclenche à 11:00 et 12:00 UTC puis le script "gate" sur 13h Europe/Paris.
+    - cron: "0 11,12 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      ICLOUD_USERNAME: ${{ secrets.ICLOUD_USERNAME }}
+      ICLOUD_APP_PASSWORD: ${{ secrets.ICLOUD_APP_PASSWORD }}
+      TEAM_NAME: ${{ secrets.TEAM_NAME }}
+      TZ: Europe/Paris
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run sync
+        run: npm run start
+
+      - name: Commit updated state (if any)
+        run: |
+          if git diff --quiet -- data/state.json; then
+            echo "No state changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/state.json
+          git commit -m "chore(state): update processed matches"
+          git push
+
+
