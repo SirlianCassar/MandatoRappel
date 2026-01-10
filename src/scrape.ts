@@ -143,13 +143,13 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
     const page = await context.newPage();
 
     const collectedJson: any[] = [];
+    const jsonUrls: string[] = [];
     page.on("response", async (res) => {
       try {
         const ct = res.headers()["content-type"] ?? "";
         const url = res.url();
         if (!ct.includes("application/json")) return;
-        // Heuristique : endpoints souvent liés aux matchs/schedule
-        if (!/match|schedule|event|esports|calendar/i.test(url)) return;
+        jsonUrls.push(url);
         const j = await res.json();
         collectedJson.push(j);
       } catch {
@@ -159,6 +159,13 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
 
     await page.goto(MATCHES_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await acceptCookiesIfPresent(page);
+    // Best effort: certains sites affichent "À venir / Upcoming"
+    try {
+      const upcoming = page.getByRole("button", { name: /à venir|upcoming|prochains/i });
+      if (await upcoming.isVisible({ timeout: 1500 })) await upcoming.click({ timeout: 1500 });
+    } catch {
+      // ignore
+    }
     await page.waitForTimeout(6_000);
 
     // 1) Extraction via JSON collecté (priorité)
@@ -189,6 +196,14 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
 
     // Impossible de garantir une extraction correcte sans structure; on préfère retourner vide
     // plutôt que de créer des événements erronés.
+    // Debug: si besoin, on imprime quelques URLs JSON vues pour aider à ajuster l’extraction.
+    if (process.env.DEBUG_SCRAPE === "1" || process.env.DEBUG_SCRAPE === "true") {
+      const unique = Array.from(new Set(jsonUrls));
+      console.log(`[DEBUG] JSON responses capturées: ${unique.length}`);
+      for (const u of unique.slice(0, 30)) console.log(`[DEBUG] ${u}`);
+      if (unique.length > 30) console.log(`[DEBUG] ... +${unique.length - 30} autres`);
+    }
+
     return [];
   } finally {
     await browser?.close().catch(() => {});

@@ -59,6 +59,7 @@ Optionnel (variable d’environnement) :
 - **ICLOUD_CALENDAR_NAME** : nom exact du calendrier iCloud à cibler (sinon : 1er calendrier détecté)
 - **DRY_RUN** : `true` ou `1` pour tester sans écrire sur iCloud
 - **FORCE_RUN** : `true` ou `1` pour exécuter immédiatement (ignore le gating 13h Europe/Paris)
+- **DEBUG_SCRAPE** : `true` ou `1` pour afficher des logs utiles au debugging du scraping
 
 ## Exécution locale
 

@@ -8,11 +8,13 @@ const EnvSchema = z.object({
   ICLOUD_CALENDAR_NAME: z.string().optional(),
   DRY_RUN: z.string().optional(),
   FORCE_RUN: z.string().optional(),
+  DEBUG_SCRAPE: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema> & {
   dryRun: boolean;
   forceRun: boolean;
+  debugScrape: boolean;
 };
 
 export function readEnv(): Env {
@@ -25,6 +27,7 @@ export function readEnv(): Env {
     ...parsed.data,
     dryRun: parsed.data.DRY_RUN === "1" || parsed.data.DRY_RUN === "true",
     forceRun: parsed.data.FORCE_RUN === "1" || parsed.data.FORCE_RUN === "true",
+    debugScrape: parsed.data.DEBUG_SCRAPE === "1" || parsed.data.DEBUG_SCRAPE === "true",
   };
 }
 

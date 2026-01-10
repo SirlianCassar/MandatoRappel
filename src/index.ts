@@ -106,6 +106,7 @@ export async function main(): Promise<void> {
 
   console.log(`[INFO] Scraping des matchs pour l'équipe: ${teamName}`);
   const scraped = await scrapeMdrMatches({ teamName });
+  console.log(`[INFO] Matchs bruts récupérés: ${scraped.length}`);
 
   // Filtrage règles métier (redondant par sécurité)
   const valid: ScrapedMatch[] = scraped.filter((m) => {
@@ -118,6 +119,13 @@ export async function main(): Promise<void> {
   });
 
   console.log(`[INFO] Matchs MDR complets détectés: ${valid.length}`);
+  if (env.debugScrape && scraped.length > 0) {
+    for (const m of scraped.slice(0, 5)) {
+      console.log(
+        `[DEBUG] ${m.startUtcIso} | ${m.teamName} vs ${m.opponentName} | ${m.bestOf ?? "BO?"} | ${m.tournamentName}`
+      );
+    }
+  }
 
   if (valid.length === 0) return;
 
