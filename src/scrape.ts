@@ -1,124 +1,29 @@
 import { chromium, type Browser, type Page } from "playwright";
-import { DateTime } from "luxon";
 import type { ScrapedMatch } from "./types.js";
 
 const BASE_URL = "https://valorantesports.com/fr-FR/";
-const MATCHES_URL = "https://valorantesports.com/fr-FR/matches";
 
 function isUnknownOpponent(name: string): boolean {
   const n = name.trim().toLowerCase();
-  return n.length === 0 || n === "tbd" || n === "to be determined";
+  return n.length === 0 || n === "tbd";
 }
 
-function parseStartToUtcIso(value: unknown): string | undefined {
-  if (typeof value !== "string" || value.trim().length === 0) return undefined;
-  // 1) ISO avec timezone
-  const iso = DateTime.fromISO(value, { setZone: true });
-  if (iso.isValid) return iso.toUTC().toISO() ?? undefined;
-
-  // 2) timestamp ms ou s en string
-  if (/^\d{10,13}$/.test(value.trim())) {
-    const num = Number(value.trim());
-    const ms = value.trim().length === 10 ? num * 1000 : num;
-    return DateTime.fromMillis(ms).toUTC().toISO() ?? undefined;
-  }
-
-  return undefined;
-}
-
-function pickString(obj: any, keys: string[]): string | undefined {
-  for (const k of keys) {
-    const v = obj?.[k];
-    if (typeof v === "string" && v.trim().length > 0) return v.trim();
-  }
-  return undefined;
-}
-
-function* walkJson(node: any): Generator<any> {
-  if (node && typeof node === "object") {
-    yield node;
-    if (Array.isArray(node)) {
-      for (const v of node) yield* walkJson(v);
-    } else {
-      for (const v of Object.values(node)) yield* walkJson(v);
-    }
-  }
-}
-
-function tryExtractMatchesFromJson(json: any, teamName: string): ScrapedMatch[] {
-  const out: ScrapedMatch[] = [];
-  const teamLower = teamName.toLowerCase();
-
-  for (const node of walkJson(json)) {
-    // Heuristique: objet qui ressemble à un match avec 2 équipes + horaire + tournoi
-    const teams = node?.teams ?? node?.competitors ?? node?.participants;
-    const team1 = pickString(node, ["team1", "homeTeam", "teamA", "leftTeam", "teamName1"]);
-    const team2 = pickString(node, ["team2", "awayTeam", "teamB", "rightTeam", "teamName2"]);
-
-    let names: string[] | undefined;
-    if (Array.isArray(teams) && teams.length === 2) {
-      const n0 = pickString(teams[0], ["name", "teamName", "displayName"]);
-      const n1 = pickString(teams[1], ["name", "teamName", "displayName"]);
-      if (n0 && n1) names = [n0, n1];
-    } else if (team1 && team2) {
-      names = [team1, team2];
-    }
-
-    if (!names) continue;
-    const [a, b] = names;
-    const aLower = a.toLowerCase();
-    const bLower = b.toLowerCase();
-    if (aLower !== teamLower && bLower !== teamLower) continue;
-
-    const opponent = aLower === teamLower ? b : a;
-    if (isUnknownOpponent(opponent)) continue;
-
-    const start =
-      parseStartToUtcIso(pickString(node, ["startTime", "scheduledTime", "time", "dateTime", "beginAt"])) ??
-      parseStartToUtcIso(node?.startTime) ??
-      parseStartToUtcIso(node?.scheduledTime);
-    if (!start) continue;
-
-    // Tournoi
-    const tournament =
-      pickString(node?.tournament, ["name", "displayName"]) ??
-      pickString(node, ["tournamentName", "leagueName", "eventName", "competitionName"]);
-    if (!tournament) continue; // match incomplet (règles métier)
-
-    // BO (optionnel)
-    const boRaw =
-      pickString(node, ["bestOf", "bo", "matchFormat", "format"]) ??
-      pickString(node?.format, ["name", "shortName"]);
-    const bestOf = typeof boRaw === "string" && /bo\d/i.test(boRaw) ? boRaw.toUpperCase() : undefined;
-
-    const sourceUrl = typeof node?.url === "string" ? node.url : BASE_URL;
-
-    out.push({
-      teamName,
-      opponentName: opponent,
-      tournamentName: tournament,
-      bestOf,
-      startUtcIso: start,
-      sourceUrl,
-    });
-  }
-
-  // Déduplication brute (mêmes champs)
-  const seen = new Set<string>();
-  return out.filter((m) => {
-    const k = `${m.startUtcIso}|${m.teamName}|${m.opponentName}|${m.tournamentName}|${m.bestOf ?? ""}`;
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
+function parseBoToBoX(boText: string | undefined): string | undefined {
+  if (!boText) return undefined;
+  const m = boText.match(/(\d+)/);
+  if (!m) return undefined;
+  return `BO${m[1]}`;
 }
 
 async function acceptCookiesIfPresent(page: Page): Promise<void> {
   // Best effort: le site peut afficher un bandeau cookies.
+  // (Osano + autres CMP). On tente plusieurs libellés.
   const candidates = [
-    page.getByRole("button", { name: /accepter/i }),
     page.getByRole("button", { name: /tout accepter/i }),
-    page.getByRole("button", { name: /accept/i }),
+    page.getByRole("button", { name: /^accepter$/i }),
+    page.getByRole("button", { name: /accepter/i }),
+    page.getByRole("button", { name: /accept all/i }),
+    page.getByRole("button", { name: /^accept$/i }),
   ];
   for (const loc of candidates) {
     try {
@@ -132,9 +37,100 @@ async function acceptCookiesIfPresent(page: Page): Promise<void> {
   }
 }
 
+async function ensurePlanningView(page: Page): Promise<void> {
+  // La page est un planning, mais certains blocs sont en “spoilers”.
+  // En pratique, un clic sur un match révèle la vue avec les <time datetime="...Z">.
+  const hasEnoughTimes = async () => {
+    try {
+      const count = await page.locator("time[datetime]").count();
+      return count >= 3;
+    } catch {
+      return false;
+    }
+  };
+
+  if (await hasEnoughTimes()) return;
+
+  // Fallback: cliquer sur un bouton spoiler.
+  const spoiler = page.locator("button", { hasText: /SÉRIE DE|SERIE DE|JOUER\\s+\\d|CLIQUEZ POUR AFFICHER/i }).first();
+  await spoiler.click({ timeout: 10_000 });
+  await page.waitForFunction(() => document.querySelectorAll("time[datetime]").length >= 3, undefined, { timeout: 10_000 });
+}
+
+type DomMatch = {
+  startUtcIso: string;
+  leftTeam: string;
+  rightTeam: string;
+  tournament: string;
+  boText?: string;
+};
+
+async function extractDomMatches(page: Page): Promise<DomMatch[]> {
+  return page.evaluate(() => {
+    const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+
+    const cards: DomMatch[] = [];
+    const times = Array.from(document.querySelectorAll("time[datetime]"));
+    for (const t of times) {
+      const datetime = t.getAttribute("datetime");
+      if (!datetime) continue;
+
+      // On remonte jusqu'à la carte qui contient aussi le footer (tournoi + BO).
+      let cur: HTMLElement | null = t.parentElement;
+      let card: HTMLElement | null = null;
+      for (let i = 0; i < 10 && cur; i++) {
+        const txt = cur.textContent || "";
+        if (txt.includes("•") && /SÉRIE DE|SERIE DE|JOUER\s+\d/i.test(txt)) {
+          card = cur;
+          break;
+        }
+        cur = cur.parentElement;
+      }
+      if (!card) continue;
+
+      const pTeams = Array.from(card.querySelectorAll("p")).filter((p) => /tt_uppercase/i.test(p.className));
+      if (pTeams.length < 2) continue;
+      const leftTeam = norm(pTeams[0].textContent || "");
+      const rightTeam = norm(pTeams[pTeams.length - 1].textContent || "");
+
+      // Tournoi/stage au centre du footer (contient souvent "•")
+      const footerTextCandidates = Array.from(card.querySelectorAll("footer p"))
+        .map((p) => norm(p.textContent || ""))
+        .filter(Boolean);
+
+      const tournament = footerTextCandidates.find((x) => x.includes("•")) ?? footerTextCandidates[0] ?? "";
+      if (!tournament) continue;
+
+      const boText =
+        card.querySelector("footer p[aria-label*='SÉRIE']")?.getAttribute("aria-label") ||
+        footerTextCandidates.find((x) => /SÉRIE DE|SERIE DE|JOUER\s+\d/i.test(x));
+
+      cards.push({
+        startUtcIso: new Date(datetime).toISOString(),
+        leftTeam,
+        rightTeam,
+        tournament,
+        boText: boText || undefined,
+      });
+    }
+
+    // Dédup (datetime + teams + tournoi)
+    const seen = new Set<string>();
+    return cards.filter((m) => {
+      const k = `${m.startUtcIso}|${m.leftTeam}|${m.rightTeam}|${m.tournament}|${m.boText ?? ""}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  });
+}
+
 export async function scrapeMdrMatches(params: { teamName: string }): Promise<ScrapedMatch[]> {
   let browser: Browser | undefined;
   try {
+    const debugEnabled = process.env.DEBUG_SCRAPE === "1" || process.env.DEBUG_SCRAPE === "true";
+    const teamLower = params.teamName.trim().toLowerCase();
+
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
       locale: "fr-FR",
@@ -142,102 +138,78 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
     });
     const page = await context.newPage();
 
-    const collectedJson: any[] = [];
-    const jsonUrls: string[] = [];
-    const xhrUrls: string[] = [];
-
-    const debugEnabled = process.env.DEBUG_SCRAPE === "1" || process.env.DEBUG_SCRAPE === "true";
-
-    page.on("request", (req) => {
-      try {
-        const rt = req.resourceType();
-        if (rt !== "xhr" && rt !== "fetch") return;
-        const url = req.url();
-        if (!/match|matches|schedule|event|events|esports|calendar|graphql|api/i.test(url)) return;
-        xhrUrls.push(url);
-      } catch {
-        // ignore
-      }
-    });
-
-    page.on("response", async (res) => {
-      try {
-        const ct = res.headers()["content-type"] ?? "";
-        const url = res.url();
-        if (!ct.includes("application/json")) return;
-        jsonUrls.push(url);
-        const j = await res.json();
-        collectedJson.push(j);
-      } catch {
-        // ignore
-      }
-    });
-
-    await page.goto(MATCHES_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await page.goto(BASE_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await acceptCookiesIfPresent(page);
-    // Best effort: certains sites affichent "À venir / Upcoming"
-    try {
-      const upcoming = page.getByRole("button", { name: /à venir|upcoming|prochains/i });
-      if (await upcoming.isVisible({ timeout: 1500 })) await upcoming.click({ timeout: 1500 });
-    } catch {
-      // ignore
-    }
-    await page.waitForTimeout(6_000);
+    await ensurePlanningView(page);
 
-    // 1) Extraction via JSON collecté (priorité)
-    for (const j of collectedJson) {
-      const matches = tryExtractMatchesFromJson(j, params.teamName);
-      if (matches.length > 0) return matches;
-    }
+    const results: ScrapedMatch[] = [];
+    const maxDays = 30;
 
-    // 2) Fallback: __NEXT_DATA__ si présent (Next.js)
-    const nextData = await page.evaluate(() => {
-      const el = document.querySelector("#__NEXT_DATA__");
-      if (!el?.textContent) return null;
+    for (let day = 0; day < maxDays; day++) {
+      const domMatches = await extractDomMatches(page);
+      if (debugEnabled) console.log(`[DEBUG] Jour+${day}: cards=${domMatches.length}`);
+
+      for (const m of domMatches) {
+        const leftLower = m.leftTeam.toLowerCase();
+        const rightLower = m.rightTeam.toLowerCase();
+        if (leftLower !== teamLower && rightLower !== teamLower) continue;
+
+        const opponent = leftLower === teamLower ? m.rightTeam : m.leftTeam;
+        if (isUnknownOpponent(opponent)) continue;
+
+        results.push({
+          teamName: params.teamName.trim(),
+          opponentName: opponent,
+          tournamentName: m.tournament,
+          bestOf: parseBoToBoX(m.boText),
+          startUtcIso: m.startUtcIso,
+          sourceUrl: BASE_URL,
+        });
+      }
+
+      // Next day
+      const next = page.getByRole("button", { name: /SUIVANT DATE/i });
+      if (!(await next.isVisible().catch(() => false))) break;
+      if (!(await next.isEnabled().catch(() => false))) break;
+
+      const prevFirst = domMatches[0]?.startUtcIso ?? null;
+      await next.click({ timeout: 10_000 });
+      // Attendre un changement (sinon boucle sur même journée)
       try {
-        return JSON.parse(el.textContent);
+        await page.waitForFunction(
+          (prev) => {
+            const t = document.querySelector("time[datetime]") as HTMLTimeElement | null;
+            const dt = t?.getAttribute("datetime");
+            if (!dt) return prev === null; // pas de données
+            const iso = new Date(dt).toISOString();
+            return iso !== prev;
+          },
+          prevFirst,
+          { timeout: 10_000 }
+        );
       } catch {
-        return null;
+        // si pas de changement observable, on sort pour éviter une boucle infinie
+        break;
       }
+    }
+
+    // Dédup final
+    const seen = new Set<string>();
+    const deduped = results.filter((m) => {
+      const k = `${m.startUtcIso}|${m.teamName}|${m.opponentName}|${m.tournamentName}|${m.bestOf ?? ""}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
     });
-    if (nextData) {
-      const matches = tryExtractMatchesFromJson(nextData, params.teamName);
-      if (matches.length > 0) return matches;
-    }
 
-    // 3) Fallback DOM très basique (moins fiable, mais mieux que rien)
-    // On récupère le texte de la page et on tente de repérer un pattern "TEAM vs TEAM" proche d'une date.
-    const pageText = (await page.textContent("body")) ?? "";
-    if (!pageText.toLowerCase().includes(params.teamName.toLowerCase())) {
-      if (debugEnabled) {
-        const uniqueXhr = Array.from(new Set(xhrUrls));
-        const uniqueJson = Array.from(new Set(jsonUrls));
-        console.log(`[DEBUG] Requêtes XHR/fetch (match/schedule/api/graphql): ${uniqueXhr.length}`);
-        for (const u of uniqueXhr.slice(0, 40)) console.log(`[DEBUG] XHR ${u}`);
-        if (uniqueXhr.length > 40) console.log(`[DEBUG] ... +${uniqueXhr.length - 40} autres XHR`);
-
-        console.log(`[DEBUG] Réponses JSON capturées: ${uniqueJson.length}`);
-        for (const u of uniqueJson.slice(0, 40)) console.log(`[DEBUG] JSON ${u}`);
-        if (uniqueJson.length > 40) console.log(`[DEBUG] ... +${uniqueJson.length - 40} autres JSON`);
-      }
-      return [];
-    }
-
-    // Impossible de garantir une extraction correcte sans structure; on préfère retourner vide
-    // plutôt que de créer des événements erronés.
     if (debugEnabled) {
-      const uniqueXhr = Array.from(new Set(xhrUrls));
-      const uniqueJson = Array.from(new Set(jsonUrls));
-      console.log(`[DEBUG] Requêtes XHR/fetch (match/schedule/api/graphql): ${uniqueXhr.length}`);
-      for (const u of uniqueXhr.slice(0, 40)) console.log(`[DEBUG] XHR ${u}`);
-      if (uniqueXhr.length > 40) console.log(`[DEBUG] ... +${uniqueXhr.length - 40} autres XHR`);
-
-      console.log(`[DEBUG] Réponses JSON capturées: ${uniqueJson.length}`);
-      for (const u of uniqueJson.slice(0, 40)) console.log(`[DEBUG] JSON ${u}`);
-      if (uniqueJson.length > 40) console.log(`[DEBUG] ... +${uniqueJson.length - 40} autres JSON`);
+      console.log(`[DEBUG] Total MDR matches after filtering: ${deduped.length}`);
+      for (const m of deduped.slice(0, 5)) {
+        console.log(`[DEBUG] ${m.startUtcIso} | ${m.teamName} vs ${m.opponentName} | ${m.bestOf ?? "BO?"} | ${m.tournamentName}`);
+      }
     }
 
-    return [];
+    return deduped;
   } finally {
     await browser?.close().catch(() => {});
   }
