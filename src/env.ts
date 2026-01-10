@@ -7,10 +7,12 @@ const EnvSchema = z.object({
   // Optionnel mais utile en pratique (sans casser les exigences)
   ICLOUD_CALENDAR_NAME: z.string().optional(),
   DRY_RUN: z.string().optional(),
+  FORCE_RUN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema> & {
   dryRun: boolean;
+  forceRun: boolean;
 };
 
 export function readEnv(): Env {
@@ -22,6 +24,7 @@ export function readEnv(): Env {
   return {
     ...parsed.data,
     dryRun: parsed.data.DRY_RUN === "1" || parsed.data.DRY_RUN === "true",
+    forceRun: parsed.data.FORCE_RUN === "1" || parsed.data.FORCE_RUN === "true",
   };
 }
 

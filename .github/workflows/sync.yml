@@ -5,7 +5,16 @@ on:
     # GitHub cron = UTC. Pour couvrir l'heure d'été/hiver Europe/Paris,
     # on déclenche à 11:00 et 12:00 UTC puis le script "gate" sur 13h Europe/Paris.
     - cron: "0 11,12 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: "Exécuter la sync immédiatement (ignore le gating 13h Europe/Paris)"
+        required: false
+        default: "false"
+      dry_run:
+        description: "DRY RUN (n'écrit pas sur iCloud, mais exécute le scraping)"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -18,6 +27,8 @@ jobs:
       ICLOUD_APP_PASSWORD: ${{ secrets.ICLOUD_APP_PASSWORD }}
       TEAM_NAME: ${{ secrets.TEAM_NAME }}
       TZ: Europe/Paris
+      FORCE_RUN: ${{ inputs.force_run }}
+      DRY_RUN: ${{ inputs.dry_run }}
 
     steps:
       - name: Checkout

@@ -58,6 +58,7 @@ Optionnel (variable d’environnement) :
 
 - **ICLOUD_CALENDAR_NAME** : nom exact du calendrier iCloud à cibler (sinon : 1er calendrier détecté)
 - **DRY_RUN** : `true` ou `1` pour tester sans écrire sur iCloud
+- **FORCE_RUN** : `true` ou `1` pour exécuter immédiatement (ignore le gating 13h Europe/Paris)
 
 ## Exécution locale
 
@@ -78,6 +79,11 @@ npm run start
 
 Le workflow `.github/workflows/sync.yml` est planifié à **11:00 et 12:00 UTC**.
 Le script vérifie ensuite l’heure locale **Europe/Paris** et ne s’exécute réellement qu’à **13h**, ce qui rend le planning **compatible heure d’été / hiver**.
+
+Pour tester manuellement à n’importe quelle heure, lance le workflow via **Run workflow** avec :
+
+- `force_run: true`
+- (optionnel) `dry_run: true`
 
 ## Dépannage
 

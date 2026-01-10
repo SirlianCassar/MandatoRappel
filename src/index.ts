@@ -7,7 +7,8 @@ import type { MatchPayload, ScrapedMatch, StateV1 } from "./types.js";
 import { deepEqual, nowUtcIso, stableEventKeyFromSource, stableMatchId } from "./util.js";
 import { scrapeMdrMatches } from "./scrape.js";
 
-function mustRunNowParis13h(): boolean {
+function mustRunNowParis13h(forceRun: boolean): boolean {
+  if (forceRun) return true;
   // GitHub cron est en UTC, donc on "gate" en runtime pour être exact à 13h Europe/Paris (DST inclus)
   if (!process.env.GITHUB_ACTIONS) return true;
   const nowParis = DateTime.now().setZone("Europe/Paris");
@@ -93,7 +94,7 @@ async function syncOne(params: {
 export async function main(): Promise<void> {
   const env = readEnv();
 
-  if (!mustRunNowParis13h()) {
+  if (!mustRunNowParis13h(env.forceRun)) {
     console.log("[INFO] Hors fenêtre 13h Europe/Paris (gating DST). Sortie sans erreur.");
     return;
   }
