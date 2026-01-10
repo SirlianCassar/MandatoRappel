@@ -67,8 +67,6 @@ type DomMatch = {
 
 async function extractDomMatches(page: Page): Promise<DomMatch[]> {
   return page.evaluate(() => {
-    const norm = (s: string) => s.replace(/\s+/g, " ").trim();
-
     const cards: DomMatch[] = [];
     const times = Array.from(document.querySelectorAll("time[datetime]"));
     for (const t of times) {
@@ -90,12 +88,12 @@ async function extractDomMatches(page: Page): Promise<DomMatch[]> {
 
       const pTeams = Array.from(card.querySelectorAll("p")).filter((p) => /tt_uppercase/i.test(p.className));
       if (pTeams.length < 2) continue;
-      const leftTeam = norm(pTeams[0].textContent || "");
-      const rightTeam = norm(pTeams[pTeams.length - 1].textContent || "");
+      const leftTeam = (pTeams[0].textContent || "").replace(/\s+/g, " ").trim();
+      const rightTeam = (pTeams[pTeams.length - 1].textContent || "").replace(/\s+/g, " ").trim();
 
       // Tournoi/stage au centre du footer (contient souvent "•")
       const footerTextCandidates = Array.from(card.querySelectorAll("footer p"))
-        .map((p) => norm(p.textContent || ""))
+        .map((p) => (p.textContent || "").replace(/\s+/g, " ").trim())
         .filter(Boolean);
 
       const tournament = footerTextCandidates.find((x) => x.includes("•")) ?? footerTextCandidates[0] ?? "";
