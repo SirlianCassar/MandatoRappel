@@ -189,4 +189,20 @@ export async function putCalendarObject(params: {
   return { etag: etag?.trim() };
 }
 
+export async function deleteCalendarObject(params: {
+  fetchFn: FetchLike;
+  objectUrl: string;
+  etag?: string;
+}): Promise<void> {
+  const headers: Record<string, string> = {};
+  if (params.etag) headers["If-Match"] = params.etag;
+  const res = await params.fetchFn(params.objectUrl, { method: "DELETE", headers });
+  // 404 = déjà supprimé
+  if (res.status === 404) return;
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`DELETE ${params.objectUrl} -> ${res.status}\n${text}`);
+  }
+}
+
 

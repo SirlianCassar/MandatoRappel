@@ -49,12 +49,49 @@ async function ensurePlanningView(page: Page): Promise<void> {
     }
   };
 
-  if (await hasEnoughTimes()) return;
-
-  // Fallback: cliquer sur un bouton spoiler.
+  // IMPORTANT: même si les <time> existent déjà, on force une interaction
+  // pour faire apparaître les contrôles de navigation de date (SUIVANT/PRÉCÉDENT DATE).
   const spoiler = page.locator("button", { hasText: /SÉRIE DE|SERIE DE|JOUER\\s+\\d|CLIQUEZ POUR AFFICHER/i }).first();
-  await spoiler.click({ timeout: 10_000 });
-  await page.waitForFunction(() => document.querySelectorAll("time[datetime]").length >= 3, undefined, { timeout: 10_000 });
+  try {
+    if (await spoiler.isVisible({ timeout: 1500 })) {
+      await spoiler.click({ timeout: 10_000 });
+    }
+  } catch {
+    // ignore
+  }
+
+  if (!(await hasEnoughTimes())) {
+    await page.waitForFunction(() => document.querySelectorAll("time[datetime]").length >= 3, undefined, { timeout: 10_000 });
+  }
+
+  // Tenter d’attendre l’apparition des boutons de navigation de date (si la vue le supporte).
+  await page.getByRole("button", { name: /SUIVANT DATE/i }).waitFor({ state: "attached", timeout: 5000 }).catch(() => {});
+}
+
+async function loadMoreIfAvailable(page: Page, opts: { maxClicks: number }): Promise<void> {
+  // Sur le planning, la section "À venir" se charge par pages via un bouton "Charger plus".
+  // On clique tant que le nombre de <time datetime> augmente.
+  for (let i = 0; i < opts.maxClicks; i++) {
+    const before = await page.locator("time[datetime]").count().catch(() => 0);
+    const loadMores = page.getByRole("button", { name: /charger plus/i });
+    const n = await loadMores.count().catch(() => 0);
+    if (n === 0) return;
+
+    let clickedAny = false;
+    for (let j = 0; j < n; j++) {
+      const btn = loadMores.nth(j);
+      if (!(await btn.isVisible().catch(() => false))) continue;
+      if (!(await btn.isEnabled().catch(() => false))) continue;
+      await btn.scrollIntoViewIfNeeded().catch(() => {});
+      await btn.click({ timeout: 10_000 }).catch(() => {});
+      clickedAny = true;
+      await page.waitForTimeout(500);
+    }
+    if (!clickedAny) return;
+
+    const after = await page.locator("time[datetime]").count().catch(() => 0);
+    if (after <= before) return;
+  }
 }
 
 type DomMatch = {
@@ -144,6 +181,7 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
     const maxDays = 30;
 
     for (let day = 0; day < maxDays; day++) {
+      await loadMoreIfAvailable(page, { maxClicks: 10 });
       const domMatches = await extractDomMatches(page);
       if (debugEnabled) console.log(`[DEBUG] Jour+${day}: cards=${domMatches.length}`);
 
@@ -161,7 +199,9 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
           tournamentName: m.tournament,
           bestOf: parseBoToBoX(m.boText),
           startUtcIso: m.startUtcIso,
-          sourceUrl: BASE_URL,
+          // On fabrique une "sourceUrl" stable par match (utilisée comme clé d'événement stable côté iCloud).
+          // Important: si on met juste BASE_URL, tous les matchs se marchent dessus (un seul event iCloud).
+          sourceUrl: `${BASE_URL}#${encodeURIComponent(`${m.tournament}|${m.leftTeam}|${m.rightTeam}`)}`,
         });
       }
 

@@ -1,11 +1,12 @@
 import { DateTime } from "luxon";
 import { readEnv } from "./env.js";
-import { discoverCalendars, createAuthedFetch, putCalendarObject } from "./caldav.js";
+import { discoverCalendars, createAuthedFetch, putCalendarObject, deleteCalendarObject } from "./caldav.js";
 import { buildIcs } from "./ics.js";
 import { readState, writeState } from "./state.js";
 import type { MatchPayload, ScrapedMatch, StateV1 } from "./types.js";
 import { deepEqual, nowUtcIso, stableEventKeyFromSource, stableMatchId } from "./util.js";
 import { scrapeMdrMatches } from "./scrape.js";
+import { scrapeLiquipediaUpcomingMatches } from "./liquipedia.js";
 
 function mustRunNowParis13h(forceRun: boolean): boolean {
   if (forceRun) return true;
@@ -105,8 +106,43 @@ export async function main(): Promise<void> {
   const state = await readState();
 
   console.log(`[INFO] Scraping des matchs pour l'équipe: ${teamName}`);
-  const scraped = await scrapeMdrMatches({ teamName });
+  const official = await scrapeMdrMatches({ teamName });
+  let scraped = official;
+
+  if (env.useLiquipedia) {
+    try {
+      const liq = await scrapeLiquipediaUpcomingMatches({
+        teamCode: teamName,
+        url: env.LIQUIPEDIA_URL,
+      });
+      // Merge: on garde l'officiel prioritaire (même start + même adversaire => on ignore Liquipedia)
+      const officialKey = new Set(official.map((m) => `${m.startUtcIso}|${m.opponentName}`));
+      const extra = liq.filter((m) => !officialKey.has(`${m.startUtcIso}|${m.opponentName}`));
+      if (extra.length > 0) {
+        console.log(`[INFO] Liquipedia: +${extra.length} matchs ajoutés (complément de l'officiel).`);
+      }
+      scraped = official.concat(extra);
+    } catch (e) {
+      console.warn(`[WARN] Liquipedia désactivé (erreur): ${String(e)}`);
+    }
+  }
   console.log(`[INFO] Matchs bruts récupérés: ${scraped.length}`);
+
+  // Migration: si un même eventKey est référencé par plusieurs matchId,
+  // c'est typiquement un ancien état (bug: sourceUrl identique) -> on purge cet event.
+  const eventKeyCounts = new Map<string, number>();
+  for (const v of Object.values(state.matchIdIndex)) {
+    eventKeyCounts.set(v.eventKey, (eventKeyCounts.get(v.eventKey) ?? 0) + 1);
+  }
+  const corruptedEventKeys = new Set<string>();
+  for (const [k, c] of eventKeyCounts.entries()) {
+    if (c > 1) corruptedEventKeys.add(k);
+  }
+  if (corruptedEventKeys.size > 0) {
+    console.warn(
+      `[WARN] État détecté comme corrompu (eventKey partagé): ${Array.from(corruptedEventKeys).join(", ")}`
+    );
+  }
 
   // Filtrage règles métier (redondant par sécurité)
   const valid: ScrapedMatch[] = scraped.filter((m) => {
@@ -138,6 +174,25 @@ export async function main(): Promise<void> {
 
   console.log(`[INFO] Calendrier iCloud sélectionné: ${chosen.displayName}`);
 
+  // Si on a détecté des events corrompus, on les supprime une fois (hors DRY_RUN).
+  if (!env.dryRun && corruptedEventKeys.size > 0) {
+    for (const k of corruptedEventKeys) {
+      const existing = state.events[k];
+      if (!existing) continue;
+      try {
+        await deleteCalendarObject({ fetchFn, objectUrl: existing.href, etag: existing.etag });
+        console.log(`[INFO] Suppression d'un ancien event corrompu: ${k}`);
+      } catch (e) {
+        console.warn(`[WARN] Suppression impossible pour ${k}: ${String(e)}`);
+      }
+      // Nettoyage état local
+      delete state.events[k];
+    }
+    for (const [mid, v] of Object.entries(state.matchIdIndex)) {
+      if (corruptedEventKeys.has(v.eventKey)) delete state.matchIdIndex[mid];
+    }
+  }
+
   let created = 0;
   let updated = 0;
   let unchanged = 0;
@@ -155,7 +210,7 @@ export async function main(): Promise<void> {
 
     // Si on a déjà vu ce matchId exact (anti-doublon), on retrouve l'eventKey via l'index.
     const indexed = state.matchIdIndex[matchId];
-    const eventKey = indexed?.eventKey ?? computedEventKey;
+    const eventKey = indexed?.eventKey && !corruptedEventKeys.has(indexed.eventKey) ? indexed.eventKey : computedEventKey;
 
     const existing = state.events[eventKey];
     const uid = existing?.uid ?? eventKey;

@@ -60,6 +60,8 @@ Optionnel (variable d’environnement) :
 - **DRY_RUN** : `true` ou `1` pour tester sans écrire sur iCloud
 - **FORCE_RUN** : `true` ou `1` pour exécuter immédiatement (ignore le gating 13h Europe/Paris)
 - **DEBUG_SCRAPE** : `true` ou `1` pour afficher des logs utiles au debugging du scraping
+- **USE_LIQUIPEDIA** : `true` ou `1` pour compléter les matchs manquants via Liquipedia (officiel prioritaire)
+- **LIQUIPEDIA_URL** : URL Liquipedia à scrapper (par défaut : page Mandatory)
 
 ## Exécution locale
 

@@ -19,6 +19,10 @@ on:
         description: "DEBUG scraping (log des endpoints JSON vus)"
         required: false
         default: "false"
+      use_liquipedia:
+        description: "Compléter les matchs manquants via Liquipedia (officiel prioritaire)"
+        required: false
+        default: "true"
 
 permissions:
   contents: write
@@ -34,6 +38,7 @@ jobs:
       FORCE_RUN: ${{ inputs.force_run }}
       DRY_RUN: ${{ inputs.dry_run }}
       DEBUG_SCRAPE: ${{ inputs.debug_scrape }}
+      USE_LIQUIPEDIA: ${{ inputs.use_liquipedia }}
 
     steps:
       - name: Checkout

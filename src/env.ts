@@ -9,12 +9,15 @@ const EnvSchema = z.object({
   DRY_RUN: z.string().optional(),
   FORCE_RUN: z.string().optional(),
   DEBUG_SCRAPE: z.string().optional(),
+  USE_LIQUIPEDIA: z.string().optional(),
+  LIQUIPEDIA_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema> & {
   dryRun: boolean;
   forceRun: boolean;
   debugScrape: boolean;
+  useLiquipedia: boolean;
 };
 
 export function readEnv(): Env {
@@ -28,6 +31,7 @@ export function readEnv(): Env {
     dryRun: parsed.data.DRY_RUN === "1" || parsed.data.DRY_RUN === "true",
     forceRun: parsed.data.FORCE_RUN === "1" || parsed.data.FORCE_RUN === "true",
     debugScrape: parsed.data.DEBUG_SCRAPE === "1" || parsed.data.DEBUG_SCRAPE === "true",
+    useLiquipedia: parsed.data.USE_LIQUIPEDIA === "1" || parsed.data.USE_LIQUIPEDIA === "true",
   };
 }
 
