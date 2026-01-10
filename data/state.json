@@ -2,7 +2,7 @@
   "version": 1,
   "events": {
     "evt-9f04ba8597144081": {
-      "href": "https://p163-caldav.icloud.com/17882463282/calendars/2455CD02-ADD0-41AA-88C8-3CE07680E0D0/evt-9f04ba8597144081.ics",
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/3578a63d-b850-459f-b8f6-855beab690f6/evt-9f04ba8597144081.ics",
       "etag": "\"mk8wp7ny\"",
       "uid": "evt-9f04ba8597144081",
       "matchId": "mdr-3e22852b666008cf",
@@ -17,13 +17,55 @@
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-10T22:58:31.059Z"
+      "lastSeenUtcIso": "2026-01-10T23:40:48.907Z"
+    },
+    "evt-ee01ad59c471c927": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/3578a63d-b850-459f-b8f6-855beab690f6/evt-ee01ad59c471c927.ics",
+      "uid": "evt-ee01ad59c471c927",
+      "matchId": "mdr-a665cb31a38d349d",
+      "payload": {
+        "summary": "MDR VS GL",
+        "location": "BO3 — Challengers France • Semaine 1",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "startUtcIso": "2026-01-11T17:00:00.000Z",
+        "endUtcIso": "2026-01-11T19:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": false
+        }
+      },
+      "lastSeenUtcIso": "2026-01-10T23:40:48.906Z"
+    },
+    "evt-53cd53ae3b779022": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/3578a63d-b850-459f-b8f6-855beab690f6/evt-53cd53ae3b779022.ics",
+      "uid": "evt-53cd53ae3b779022",
+      "matchId": "mdr-dead4410082ec7e1",
+      "payload": {
+        "summary": "MDR VS CAL",
+        "location": "VCL France: Stage 1 - Week 3 — January 25",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "startUtcIso": "2026-01-25T14:00:00.000Z",
+        "endUtcIso": "2026-01-25T16:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-01-10T23:40:48.908Z"
     }
   },
   "matchIdIndex": {
     "mdr-3e22852b666008cf": {
       "eventKey": "evt-9f04ba8597144081",
-      "lastSeenUtcIso": "2026-01-10T22:58:31.059Z"
+      "lastSeenUtcIso": "2026-01-10T23:40:48.907Z"
+    },
+    "mdr-a665cb31a38d349d": {
+      "eventKey": "evt-ee01ad59c471c927",
+      "lastSeenUtcIso": "2026-01-10T23:40:48.906Z"
+    },
+    "mdr-dead4410082ec7e1": {
+      "eventKey": "evt-53cd53ae3b779022",
+      "lastSeenUtcIso": "2026-01-10T23:40:48.908Z"
     }
   }
 }
