@@ -115,9 +115,22 @@ export async function main(): Promise<void> {
         teamCode: teamName,
         url: env.LIQUIPEDIA_URL,
       });
-      // Merge: on garde l'officiel prioritaire (même start + même adversaire => on ignore Liquipedia)
-      const officialKey = new Set(official.map((m) => `${m.startUtcIso}|${m.opponentName}`));
-      const extra = liq.filter((m) => !officialKey.has(`${m.startUtcIso}|${m.opponentName}`));
+      // Merge: l'officiel est prioritaire.
+      // Si un match officiel existe déjà au même horaire, on ignore Liquipedia (évite les doublons
+      // en cas de divergences d'acronymes adverses: ex CAL vs CLA).
+      const officialByStart = new Map<string, ScrapedMatch>();
+      for (const m of official) officialByStart.set(m.startUtcIso, m);
+
+      const extra = liq.filter((m) => {
+        const off = officialByStart.get(m.startUtcIso);
+        if (!off) return true;
+        if (off.opponentName !== m.opponentName) {
+          console.warn(
+            `[WARN] Conflit Liquipedia ignoré (officiel prioritaire): ${m.startUtcIso} officiel=${off.opponentName} liquipedia=${m.opponentName}`
+          );
+        }
+        return false;
+      });
       if (extra.length > 0) {
         console.log(`[INFO] Liquipedia: +${extra.length} matchs ajoutés (complément de l'officiel).`);
       }

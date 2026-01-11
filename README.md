@@ -63,6 +63,9 @@ Optionnel (variable d’environnement) :
 - **USE_LIQUIPEDIA** : `true` ou `1` pour compléter les matchs manquants via Liquipedia (officiel prioritaire)
 - **LIQUIPEDIA_URL** : URL Liquipedia à scrapper (par défaut : page Mandatory)
 
+Note: pour `TEAM_NAME=MDR`, le scraper officiel applique automatiquement le filtre `Toutes les ligues → Challengers France`
+afin d'obtenir le calendrier complet (incluant le BO).
+
 ## Exécution locale
 
 Prérequis : **Node.js 20+**

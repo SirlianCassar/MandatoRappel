@@ -68,6 +68,28 @@ async function ensurePlanningView(page: Page): Promise<void> {
   await page.getByRole("button", { name: /SUIVANT DATE/i }).waitFor({ state: "attached", timeout: 5000 }).catch(() => {});
 }
 
+async function selectLeagueFilterIfNeeded(page: Page, opts: { teamName: string; debug: boolean }): Promise<void> {
+  // Pour MDR, le planning "Toutes les ligues" n'affiche pas tous les matchs à venir.
+  // Le filtre "Challengers France" révèle le calendrier complet (et les BO).
+  if (opts.teamName.trim().toLowerCase() !== "mdr") return;
+
+  const filter = page.getByRole("button", { name: /Toutes les ligues/i }).first();
+  if (!(await filter.isVisible().catch(() => false))) return;
+
+  await filter.click({ timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(300);
+
+  // Les options du popover sont des <a> visibles (pas des <button>).
+  const link = page.locator("a", { hasText: /Challengers France/i }).first();
+  if (!(await link.isVisible().catch(() => false))) {
+    if (opts.debug) console.log("[DEBUG] Filtre ligue: 'Challengers France' non visible.");
+    return;
+  }
+  await link.click({ timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(1200);
+  if (opts.debug) console.log("[DEBUG] Filtre ligue appliqué: Challengers France");
+}
+
 async function loadMoreIfAvailable(page: Page, opts: { maxClicks: number }): Promise<void> {
   // Sur le planning, la section "À venir" se charge par pages via un bouton "Charger plus".
   // On clique tant que le nombre de <time datetime> augmente.
@@ -176,6 +198,7 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await acceptCookiesIfPresent(page);
     await ensurePlanningView(page);
+    await selectLeagueFilterIfNeeded(page, { teamName: params.teamName, debug: debugEnabled });
 
     const results: ScrapedMatch[] = [];
     const maxDays = 30;
