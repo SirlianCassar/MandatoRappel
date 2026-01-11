@@ -193,26 +193,33 @@ export async function getCalendarObjectMeta(params: {
   fetchFn: FetchLike;
   objectUrl: string;
 }): Promise<{ exists: boolean; etag?: string }> {
-  // iCloud accepte généralement HEAD/GET sur les .ics.
-  // Objectif: savoir si l'objet existe réellement (sinon l'état local peut être "optimiste", ex DRY_RUN).
-  const tryRequest = async (method: "HEAD" | "GET") => {
-    const res = await params.fetchFn(params.objectUrl, { method });
-    return res;
-  };
+  // iCloud est capricieux sur HEAD/GET (peut renvoyer 400).
+  // La manière CalDAV canonique: PROPFIND Depth:0 sur l'objet pour lire getetag.
+  const res = await params.fetchFn(params.objectUrl, {
+    method: "PROPFIND",
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      Depth: "0",
+    },
+    body: `<?xml version="1.0" encoding="UTF-8"?>
+<D:propfind xmlns:D="DAV:">
+  <D:prop>
+    <D:getetag/>
+  </D:prop>
+</D:propfind>`,
+  });
 
-  let res = await tryRequest("HEAD").catch(() => undefined);
-  if (!res || res.status === 405) {
-    res = await tryRequest("GET");
-  }
-
+  const text = await res.text().catch(() => "");
   if (res.status === 404) return { exists: false };
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
     throw new Error(`${res.status} ${res.statusText} on ${params.objectUrl}\n${text}`);
   }
 
-  const etag = getHeader(res.headers, "etag") ?? getHeader(res.headers, "ETag");
-  return { exists: true, etag: etag?.trim() };
+  const xml = parser.parse(text);
+  const response = asArray(xml?.multistatus?.response)?.[0];
+  const prop = asArray(response?.propstat)?.[0]?.prop ?? response?.propstat?.prop;
+  const etag = prop?.getetag;
+  return { exists: true, etag: typeof etag === "string" ? etag.trim() : undefined };
 }
 
 export async function deleteCalendarObject(params: {
