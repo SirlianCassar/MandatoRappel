@@ -23,6 +23,10 @@ on:
         description: "Compléter les matchs manquants via Liquipedia (officiel prioritaire)"
         required: false
         default: "true"
+      icloud_calendar_name:
+        description: "Nom exact du calendrier iCloud cible (ex: Matchs Mandatory)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -34,6 +38,8 @@ jobs:
       ICLOUD_USERNAME: ${{ secrets.ICLOUD_USERNAME }}
       ICLOUD_APP_PASSWORD: ${{ secrets.ICLOUD_APP_PASSWORD }}
       TEAM_NAME: ${{ secrets.TEAM_NAME }}
+      # Peut être défini en Repository Variable (recommandé) ou Secret, ou en input manuel
+      ICLOUD_CALENDAR_NAME: ${{ inputs.icloud_calendar_name || vars.ICLOUD_CALENDAR_NAME || secrets.ICLOUD_CALENDAR_NAME }}
       TZ: Europe/Paris
       FORCE_RUN: ${{ inputs.force_run }}
       DRY_RUN: ${{ inputs.dry_run }}
