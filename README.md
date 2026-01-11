@@ -35,7 +35,11 @@ https://valorantesports.com/fr-FR/
 
 - **Rappels** :
   - toujours **1 heure avant**
-  - **+ 1 jour avant** si l’événement est créé/maj **≥ 48h avant** le début (ou si déjà présent)
+  - **+ 1 jour avant** si le match n’est **pas aujourd’hui** (Europe/Paris)
+
+- **Décalage de l'événement** :
+  - l'heure de **début** est mise à **-30 minutes** de l'heure officielle
+  - l'heure de **fin** est mise à **+1 heure** par rapport à la fin officielle (durée officielle par défaut: 2h)
 
 ## Fonctionnement (dédup + mises à jour)
 

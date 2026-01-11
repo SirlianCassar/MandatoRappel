@@ -11,6 +11,10 @@ export type MatchPayload = {
   summary: string; // "MDR VS ADV"
   location: string; // "BOx — TOURNOI" ou "TOURNOI"
   description: string; // strictement 2 lignes
+  // Heures de référence (officielles) du match.
+  // Utilisées pour calculer les rappels même si on décale l'événement dans le calendrier.
+  officialStartUtcIso?: string;
+  officialEndUtcIso?: string;
   startUtcIso: string;
   endUtcIso: string;
   alarms: {

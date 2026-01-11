@@ -36,6 +36,14 @@ function fmtUtc(dtIso: string): string {
   return `${yyyy}${mm}${dd}T${hh}${mi}${ss}Z`;
 }
 
+function addAlarm(lines: string[], triggerLine: string): void {
+  lines.push("BEGIN:VALARM");
+  lines.push(triggerLine);
+  lines.push("ACTION:DISPLAY");
+  lines.push("DESCRIPTION:Reminder");
+  lines.push("END:VALARM");
+}
+
 export function buildIcs(params: {
   uid: string;
   dtstampUtcIso: string;
@@ -68,16 +76,19 @@ export function buildIcs(params: {
   lines.push("TRANSP:OPAQUE");
 
   // Alarmes (VALARM)
-  // - Toujours 1h avant
-  // - 1 jour avant si demandé
-  const alarms: Array<{ trigger: string }> = [{ trigger: "-PT1H" }];
-  if (keepMinus1DayAlarm) alarms.push({ trigger: "-P1D" });
-  for (const a of alarms) {
-    lines.push("BEGIN:VALARM");
-    lines.push(`TRIGGER:${a.trigger}`);
-    lines.push("ACTION:DISPLAY");
-    lines.push("DESCRIPTION:Reminder");
-    lines.push("END:VALARM");
+  // Règles:
+  // - toujours 1h avant le début officiel
+  // - +1j avant le début officiel si demandé
+  //
+  // IMPORTANT: l'événement est décalé (DTSTART = officiel - 30min),
+  // donc on utilise des TRIGGER absolus (VALUE=DATE-TIME) basés sur l'heure officielle.
+  const refStartIso = payload.officialStartUtcIso ?? payload.startUtcIso;
+  const ref = new Date(refStartIso);
+  const minus1Hour = new Date(ref.getTime() - 60 * 60 * 1000).toISOString();
+  addAlarm(lines, `TRIGGER;VALUE=DATE-TIME:${fmtUtc(minus1Hour)}`);
+  if (keepMinus1DayAlarm) {
+    const minus1Day = new Date(ref.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    addAlarm(lines, `TRIGGER;VALUE=DATE-TIME:${fmtUtc(minus1Day)}`);
   }
 
   lines.push("END:VEVENT");

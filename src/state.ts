@@ -19,6 +19,8 @@ const StateSchema: z.ZodType<StateV1> = z.object({
         summary: z.string(),
         location: z.string(),
         description: z.string(),
+        officialStartUtcIso: z.string().optional(),
+        officialEndUtcIso: z.string().optional(),
         startUtcIso: z.string(),
         endUtcIso: z.string(),
         alarms: z.object({

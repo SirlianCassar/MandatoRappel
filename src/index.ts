@@ -23,8 +23,15 @@ function mustRunNowParis13h(forceRun: boolean): boolean {
 }
 
 function buildPayload(match: ScrapedMatch, teamName: string, nowUtc: DateTime, existing?: MatchPayload): MatchPayload {
-  const start = DateTime.fromISO(match.startUtcIso, { zone: "utc" });
-  const end = start.plus({ hours: 2 }); // durée par défaut
+  // Heure officielle (source)
+  const officialStart = DateTime.fromISO(match.startUtcIso, { zone: "utc" });
+  const officialEnd = officialStart.plus({ hours: 2 }); // durée officielle par défaut
+
+  // Décalage demandé pour l'événement iCloud:
+  // - début: 30 minutes avant l'heure officielle
+  // - fin: 1 heure après la fin officielle (=> +3h par rapport à l'heure officielle si fin officielle=+2h)
+  const start = officialStart.minus({ minutes: 30 });
+  const end = officialEnd.plus({ hours: 1 });
 
   const summary = `${teamName} VS ${match.opponentName}`.trim();
 
@@ -34,15 +41,19 @@ function buildPayload(match: ScrapedMatch, teamName: string, nowUtc: DateTime, e
   const description = "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/";
 
   // Alarmes:
-  // - 1h toujours
-  // - 1j si: déjà présent OU si l'ajout/maj se fait >= 48h avant le start
-  const isAtLeast48hBefore = start.diff(nowUtc, "hours").hours >= 48;
-  const minus1Day = existing?.alarms.minus1Day === true || isAtLeast48hBefore;
+  // - 1h avant le début (toujours)
+  // - 1j avant le début si le match n'est pas "aujourd'hui" (Europe/Paris)
+  //   (si le match est le jour même, pas de rappel 1j)
+  const nowParisDate = nowUtc.setZone("Europe/Paris").toISODate();
+  const matchParisDate = officialStart.setZone("Europe/Paris").toISODate();
+  const minus1Day = !!nowParisDate && !!matchParisDate && matchParisDate !== nowParisDate;
 
   return {
     summary,
     location,
     description,
+    officialStartUtcIso: officialStart.toUTC().toISO()!,
+    officialEndUtcIso: officialEnd.toUTC().toISO()!,
     startUtcIso: start.toUTC().toISO()!,
     endUtcIso: end.toUTC().toISO()!,
     alarms: {
