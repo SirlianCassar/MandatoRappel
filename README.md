@@ -66,6 +66,10 @@ Optionnel (variable d’environnement) :
 Note: pour `TEAM_NAME=MDR`, le scraper officiel applique automatiquement le filtre `Toutes les ligues → Challengers France`
 afin d'obtenir le calendrier complet (incluant le BO).
 
+Important: certains calendriers iCloud peuvent être **non modifiables** (partagés/abonnés).  
+Le script sélectionne automatiquement un calendrier **writable** qui supporte `VEVENT`. Si `ICLOUD_CALENDAR_NAME` pointe vers
+un calendrier non writable, il affichera un warning (ou échouera si aucun calendrier writable n'est disponible).
+
 ## Exécution locale
 
 Prérequis : **Node.js 20+**

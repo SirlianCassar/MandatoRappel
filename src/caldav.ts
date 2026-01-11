@@ -3,6 +3,8 @@ import { XMLParser } from "fast-xml-parser";
 export type CaldavCalendar = {
   url: string; // collection URL (doit finir par /)
   displayName: string;
+  supportsVevent: boolean;
+  writable: boolean;
 };
 
 type FetchLike = typeof fetch;
@@ -127,6 +129,8 @@ export async function discoverCalendars(fetchFn: FetchLike, baseUrl = "https://c
   <D:prop>
     <D:displayname/>
     <D:resourcetype/>
+    <D:current-user-privilege-set/>
+    <C:supported-calendar-component-set/>
   </D:prop>
 </D:propfind>`,
     1
@@ -139,15 +143,33 @@ export async function discoverCalendars(fetchFn: FetchLike, baseUrl = "https://c
     const prop = asArray(r?.propstat)?.[0]?.prop ?? r?.propstat?.prop;
     const displayName = prop?.displayname ?? "";
     const resType = prop?.resourcetype;
+    const privilegeSet = prop?.["current-user-privilege-set"];
+    const supported = prop?.["supported-calendar-component-set"];
 
     const isCalendar =
       !!resType?.calendar ||
       (typeof resType === "object" && Object.prototype.hasOwnProperty.call(resType, "calendar"));
 
     if (!href || !isCalendar) continue;
+
+    // supported-calendar-component-set: contient typiquement <comp name="VEVENT"/>
+    const comps = asArray(supported?.comp);
+    const supportsVevent = comps.length === 0
+      ? true // certains serveurs omettent ce champ -> on suppose VEVENT supporté
+      : comps.some((c: any) => String(c?.["@_name"] ?? "").toUpperCase() === "VEVENT");
+
+    // current-user-privilege-set: liste de privilèges (ex: write-content, all...)
+    const privileges = asArray(privilegeSet?.privilege).flatMap((p: any) => {
+      if (!p || typeof p !== "object") return [];
+      return Object.keys(p).map((k) => String(k));
+    });
+    const writable = privileges.includes("all") || privileges.includes("write") || privileges.includes("write-content");
+
     calendars.push({
       url: ensureTrailingSlash(resolveHref(homeUrl, href)),
       displayName: String(displayName || "").trim() || "(sans nom)",
+      supportsVevent,
+      writable,
     });
   }
 

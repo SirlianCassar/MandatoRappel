@@ -202,10 +202,36 @@ export async function main(): Promise<void> {
 
   const fetchFn = createAuthedFetch(env.ICLOUD_USERNAME, env.ICLOUD_APP_PASSWORD);
   const calendars = await discoverCalendars(fetchFn);
-  const chosen =
-    (env.ICLOUD_CALENDAR_NAME
-      ? calendars.find((c) => c.displayName.toLowerCase() === env.ICLOUD_CALENDAR_NAME!.toLowerCase())
-      : undefined) ?? calendars[0];
+  const wantedName = env.ICLOUD_CALENDAR_NAME?.trim();
+  const byName = wantedName
+    ? calendars.find((c) => c.displayName.toLowerCase() === wantedName.toLowerCase())
+    : undefined;
+  const byNameWritable = wantedName
+    ? calendars.find(
+        (c) => c.displayName.toLowerCase() === wantedName.toLowerCase() && c.writable && c.supportsVevent
+      )
+    : undefined;
+
+  const fallback = calendars.find((c) => c.writable && c.supportsVevent);
+  const chosen = byNameWritable ?? fallback;
+
+  if (!chosen) {
+    const list = calendars
+      .map((c) => `- ${c.displayName} (writable=${c.writable}, vevent=${c.supportsVevent})`)
+      .join("\n");
+    throw new Error(
+      `Aucun calendrier iCloud writable+VEVENT trouvé.\n` +
+        (wantedName ? `Calendrier demandé: ${wantedName}\n` : "") +
+        `Calendriers détectés:\n${list}`
+    );
+  }
+
+  if (wantedName && byName && !byName.writable) {
+    console.warn(
+      `[WARN] Calendrier '${wantedName}' détecté mais non writable (403 probable). ` +
+        `On utilise '${chosen.displayName}' à la place.`
+    );
+  }
 
   console.log(`[INFO] Calendrier iCloud sélectionné: ${chosen.displayName}`);
 
