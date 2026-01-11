@@ -1,6 +1,12 @@
 import { DateTime } from "luxon";
 import { readEnv } from "./env.js";
-import { discoverCalendars, createAuthedFetch, putCalendarObject, deleteCalendarObject } from "./caldav.js";
+import {
+  discoverCalendars,
+  createAuthedFetch,
+  putCalendarObject,
+  deleteCalendarObject,
+  getCalendarObjectMeta,
+} from "./caldav.js";
 import { buildIcs } from "./ics.js";
 import { readState, writeState } from "./state.js";
 import type { MatchPayload, ScrapedMatch, StateV1 } from "./types.js";
@@ -54,7 +60,7 @@ async function syncOne(params: {
   payload: MatchPayload;
   existingState?: StateV1["events"][string];
   dryRun: boolean;
-}): Promise<{ href: string; etag?: string; didChange: boolean }> {
+}): Promise<{ href: string; etag?: string; didChange: boolean; didCreateOnServer: boolean }> {
   const objectUrl = new URL(`${params.eventKey}.ics`, params.calendarUrl).toString();
   const uid = params.uid;
   const dtstampUtcIso = nowUtcIso();
@@ -63,7 +69,8 @@ async function syncOne(params: {
   const ics = buildIcs({ uid, dtstampUtcIso, payload: params.payload, keepMinus1DayAlarm });
 
   if (params.dryRun) {
-    return { href: objectUrl, etag: params.existingState?.etag, didChange: true };
+    const didChange = !params.existingState || !deepEqual(params.existingState.payload, params.payload);
+    return { href: objectUrl, etag: params.existingState?.etag, didChange, didCreateOnServer: !params.existingState };
   }
 
   if (!params.existingState) {
@@ -73,23 +80,38 @@ async function syncOne(params: {
       ics,
       createOnly: true,
     });
-    return { href: objectUrl, etag, didChange: true };
+    return { href: objectUrl, etag, didChange: true, didCreateOnServer: true };
+  }
+
+  // Vérifier que l'objet existe réellement côté iCloud.
+  // Important: avant, on persistait l'état en DRY_RUN, ce qui pouvait "inventer" des events inexistants.
+  const meta = await getCalendarObjectMeta({ fetchFn: params.fetchFn, objectUrl });
+  if (!meta.exists) {
+    const { etag } = await putCalendarObject({
+      fetchFn: params.fetchFn,
+      objectUrl,
+      ics,
+      createOnly: true,
+    });
+    return { href: objectUrl, etag, didChange: true, didCreateOnServer: true };
   }
 
   // Update (PUT) si payload a changé
   if (deepEqual(params.existingState.payload, params.payload)) {
-    return { href: objectUrl, etag: params.existingState.etag, didChange: false };
+    // Profiter du HEAD/GET pour récupérer un ETag manquant.
+    return { href: objectUrl, etag: meta.etag ?? params.existingState.etag, didChange: false, didCreateOnServer: false };
   }
 
+  const etagForUpdate = params.existingState.etag ?? meta.etag;
   const { etag } = await putCalendarObject({
     fetchFn: params.fetchFn,
     objectUrl,
     ics,
-    etag: params.existingState.etag,
+    etag: etagForUpdate,
     createOnly: false,
   });
 
-  return { href: objectUrl, etag, didChange: true };
+  return { href: objectUrl, etag, didChange: true, didCreateOnServer: false };
 }
 
 export async function main(): Promise<void> {
@@ -239,32 +261,36 @@ export async function main(): Promise<void> {
       dryRun: env.dryRun,
     });
 
-    if (!existing) created += 1;
+    if (result.didCreateOnServer) created += 1;
     else if (result.didChange) updated += 1;
     else unchanged += 1;
 
-    // Mise à jour index anti-doublon: si l'événement existait et que matchId a changé, on supprime l'ancien.
-    if (existing && existing.matchId !== matchId) {
-      delete state.matchIdIndex[existing.matchId];
-    }
-    state.matchIdIndex[matchId] = { eventKey, lastSeenUtcIso: nowUtcIso() };
+    if (!env.dryRun) {
+      // Mise à jour index anti-doublon: si l'événement existait et que matchId a changé, on supprime l'ancien.
+      if (existing && existing.matchId !== matchId) {
+        delete state.matchIdIndex[existing.matchId];
+      }
+      state.matchIdIndex[matchId] = { eventKey, lastSeenUtcIso: nowUtcIso() };
 
-    state.events[eventKey] = {
-      href: result.href,
-      etag: result.etag ?? existing?.etag,
-      uid,
-      matchId,
-      payload,
-      lastSeenUtcIso: nowUtcIso(),
-    };
+      state.events[eventKey] = {
+        href: result.href,
+        etag: result.etag ?? existing?.etag,
+        uid,
+        matchId,
+        payload,
+        lastSeenUtcIso: nowUtcIso(),
+      };
+    }
   }
 
-  await writeState(state);
   console.log(`[INFO] Sync terminé. Créés=${created} / MAJ=${updated} / Inchangés=${unchanged}`);
 
   if (env.dryRun) {
-    console.log("[INFO] DRY_RUN actif: aucune écriture CalDAV, mais état local mis à jour.");
+    console.log("[INFO] DRY_RUN actif: aucune écriture CalDAV, état local inchangé.");
+    return;
   }
+
+  await writeState(state);
 }
 
 main().catch((err) => {

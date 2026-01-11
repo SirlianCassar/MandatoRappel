@@ -189,6 +189,32 @@ export async function putCalendarObject(params: {
   return { etag: etag?.trim() };
 }
 
+export async function getCalendarObjectMeta(params: {
+  fetchFn: FetchLike;
+  objectUrl: string;
+}): Promise<{ exists: boolean; etag?: string }> {
+  // iCloud accepte généralement HEAD/GET sur les .ics.
+  // Objectif: savoir si l'objet existe réellement (sinon l'état local peut être "optimiste", ex DRY_RUN).
+  const tryRequest = async (method: "HEAD" | "GET") => {
+    const res = await params.fetchFn(params.objectUrl, { method });
+    return res;
+  };
+
+  let res = await tryRequest("HEAD").catch(() => undefined);
+  if (!res || res.status === 405) {
+    res = await tryRequest("GET");
+  }
+
+  if (res.status === 404) return { exists: false };
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText} on ${params.objectUrl}\n${text}`);
+  }
+
+  const etag = getHeader(res.headers, "etag") ?? getHeader(res.headers, "ETag");
+  return { exists: true, etag: etag?.trim() };
+}
+
 export async function deleteCalendarObject(params: {
   fetchFn: FetchLike;
   objectUrl: string;
