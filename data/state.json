@@ -60,7 +60,7 @@
     },
     "evt-35f0572dc2fa4332": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-35f0572dc2fa4332.ics",
-      "etag": "\"mk91o90c\"",
+      "etag": "\"mk91o90d\"",
       "uid": "evt-35f0572dc2fa4332",
       "matchId": "mdr-15da6675ca29fd4f",
       "payload": {
@@ -73,10 +73,10 @@
         "endUtcIso": "2026-01-18T20:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
-          "minus1Day": true
+          "minus1Day": false
         }
       },
-      "lastSeenUtcIso": "2026-01-17T12:43:45.673Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:18.922Z"
     },
     "evt-94ee4fc9bbcc4701": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-94ee4fc9bbcc4701.ics",
@@ -96,7 +96,7 @@
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-15T12:52:07.663Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:19.102Z"
     },
     "evt-cffc98c6c8110e6f": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-cffc98c6c8110e6f.ics",
@@ -116,7 +116,7 @@
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-15T12:52:07.777Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:19.257Z"
     },
     "evt-403543ee0a5d6029": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-403543ee0a5d6029.ics",
@@ -136,7 +136,7 @@
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-15T12:52:07.897Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:19.410Z"
     }
   },
   "matchIdIndex": {
@@ -154,19 +154,19 @@
     },
     "mdr-15da6675ca29fd4f": {
       "eventKey": "evt-35f0572dc2fa4332",
-      "lastSeenUtcIso": "2026-01-17T12:43:45.673Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:18.922Z"
     },
     "mdr-dc0ad8c8a17e3f6f": {
       "eventKey": "evt-94ee4fc9bbcc4701",
-      "lastSeenUtcIso": "2026-01-15T12:52:07.663Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:19.102Z"
     },
     "mdr-72d0c55e8304f493": {
       "eventKey": "evt-cffc98c6c8110e6f",
-      "lastSeenUtcIso": "2026-01-15T12:52:07.777Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:19.257Z"
     },
     "mdr-91c480dd0714544b": {
       "eventKey": "evt-403543ee0a5d6029",
-      "lastSeenUtcIso": "2026-01-15T12:52:07.897Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:19.410Z"
     }
   }
 }
