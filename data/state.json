@@ -42,21 +42,24 @@
       "lastSeenUtcIso": "2026-01-11T12:45:36.702Z"
     },
     "evt-53cd53ae3b779022": {
-      "href": "https://p163-caldav.icloud.com/17882463282/calendars/3578a63d-b850-459f-b8f6-855beab690f6/evt-53cd53ae3b779022.ics",
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-53cd53ae3b779022.ics",
+      "etag": "\"ml58gxdq\"",
       "uid": "evt-53cd53ae3b779022",
-      "matchId": "mdr-dead4410082ec7e1",
+      "matchId": "mdr-343820c09ff9b27a",
       "payload": {
-        "summary": "MDR VS CAL",
-        "location": "VCL France: Stage 1 - Week 3 — January 25",
+        "summary": "MDR VS GL",
+        "location": "VCL France: Stage 1 - Playoffs — UBSF",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-01-25T14:00:00.000Z",
-        "endUtcIso": "2026-01-25T16:00:00.000Z",
+        "officialStartUtcIso": "2026-02-07T19:00:00.000Z",
+        "officialEndUtcIso": "2026-02-07T21:00:00.000Z",
+        "startUtcIso": "2026-02-07T18:30:00.000Z",
+        "endUtcIso": "2026-02-07T22:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-10T23:40:48.908Z"
+      "lastSeenUtcIso": "2026-02-02T13:56:36.998Z"
     },
     "evt-35f0572dc2fa4332": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-35f0572dc2fa4332.ics",
@@ -137,6 +140,26 @@
         }
       },
       "lastSeenUtcIso": "2026-01-28T12:56:21.166Z"
+    },
+    "evt-a4a559bdc30ef1b1": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-a4a559bdc30ef1b1.ics",
+      "etag": "\"ml58gwq3\"",
+      "uid": "evt-a4a559bdc30ef1b1",
+      "matchId": "mdr-8127635babb5494d",
+      "payload": {
+        "summary": "MDR VS GL",
+        "location": "BO3 — Challengers France • Play-offs",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-02-07T16:00:00.000Z",
+        "officialEndUtcIso": "2026-02-07T18:00:00.000Z",
+        "startUtcIso": "2026-02-07T15:30:00.000Z",
+        "endUtcIso": "2026-02-07T19:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-02-02T13:56:36.129Z"
     }
   },
   "matchIdIndex": {
@@ -147,10 +170,6 @@
     "mdr-a665cb31a38d349d": {
       "eventKey": "evt-ee01ad59c471c927",
       "lastSeenUtcIso": "2026-01-11T12:45:36.702Z"
-    },
-    "mdr-dead4410082ec7e1": {
-      "eventKey": "evt-53cd53ae3b779022",
-      "lastSeenUtcIso": "2026-01-10T23:40:48.908Z"
     },
     "mdr-15da6675ca29fd4f": {
       "eventKey": "evt-35f0572dc2fa4332",
@@ -167,6 +186,14 @@
     "mdr-91c480dd0714544b": {
       "eventKey": "evt-403543ee0a5d6029",
       "lastSeenUtcIso": "2026-01-28T12:56:21.166Z"
+    },
+    "mdr-8127635babb5494d": {
+      "eventKey": "evt-a4a559bdc30ef1b1",
+      "lastSeenUtcIso": "2026-02-02T13:56:36.129Z"
+    },
+    "mdr-343820c09ff9b27a": {
+      "eventKey": "evt-53cd53ae3b779022",
+      "lastSeenUtcIso": "2026-02-02T13:56:36.998Z"
     }
   }
 }
