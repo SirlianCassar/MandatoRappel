@@ -20,6 +20,12 @@ export type Env = z.infer<typeof EnvSchema> & {
   useLiquipedia: boolean;
 };
 
+function isTruthy(value?: string): boolean {
+  if (!value) return false;
+  const v = value.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "y" || v === "on";
+}
+
 export function readEnv(): Env {
   const parsed = EnvSchema.safeParse(process.env);
   if (!parsed.success) {
@@ -28,11 +34,10 @@ export function readEnv(): Env {
   }
   return {
     ...parsed.data,
-    dryRun: parsed.data.DRY_RUN === "1" || parsed.data.DRY_RUN === "true",
-    forceRun: parsed.data.FORCE_RUN === "1" || parsed.data.FORCE_RUN === "true",
-    debugScrape: parsed.data.DEBUG_SCRAPE === "1" || parsed.data.DEBUG_SCRAPE === "true",
-    useLiquipedia: parsed.data.USE_LIQUIPEDIA === "1" || parsed.data.USE_LIQUIPEDIA === "true",
+    dryRun: isTruthy(parsed.data.DRY_RUN),
+    forceRun: isTruthy(parsed.data.FORCE_RUN),
+    debugScrape: isTruthy(parsed.data.DEBUG_SCRAPE),
+    useLiquipedia: isTruthy(parsed.data.USE_LIQUIPEDIA),
   };
 }
-
 

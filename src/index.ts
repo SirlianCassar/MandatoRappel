@@ -13,14 +13,7 @@ import type { MatchPayload, ScrapedMatch, StateV1 } from "./types.js";
 import { deepEqual, nowUtcIso, stableEventKeyFromSource, stableMatchId } from "./util.js";
 import { scrapeMdrMatches } from "./scrape.js";
 import { scrapeLiquipediaUpcomingMatches } from "./liquipedia.js";
-
-function mustRunNowParis13h(forceRun: boolean): boolean {
-  if (forceRun) return true;
-  // GitHub cron est en UTC, donc on "gate" en runtime pour être exact à 13h Europe/Paris (DST inclus)
-  if (!process.env.GITHUB_ACTIONS) return true;
-  const nowParis = DateTime.now().setZone("Europe/Paris");
-  return nowParis.hour === 13;
-}
+import { parseNotificationConfig, sendNotification } from "./notify.js";
 
 function buildPayload(match: ScrapedMatch, teamName: string, nowUtc: DateTime, existing?: MatchPayload): MatchPayload {
   // Heure officielle (source)
@@ -113,7 +106,7 @@ async function syncOne(params: {
     return { href: objectUrl, etag: meta.etag ?? params.existingState.etag, didChange: false, didCreateOnServer: false };
   }
 
-  const etagForUpdate = params.existingState.etag ?? meta.etag;
+  const etagForUpdate = meta.etag ?? params.existingState.etag;
   const { etag } = await putCalendarObject({
     fetchFn: params.fetchFn,
     objectUrl,
@@ -127,11 +120,6 @@ async function syncOne(params: {
 
 export async function main(): Promise<void> {
   const env = readEnv();
-
-  if (!mustRunNowParis13h(env.forceRun)) {
-    console.log("[INFO] Hors fenêtre 13h Europe/Paris (gating DST). Sortie sans erreur.");
-    return;
-  }
 
   const nowUtc = DateTime.now().toUTC();
   const teamName = env.TEAM_NAME.trim();
@@ -328,11 +316,27 @@ export async function main(): Promise<void> {
   }
 
   await writeState(state);
+
+  // Envoyer une notification si configurée
+  const notifyConfig = parseNotificationConfig();
+  if (notifyConfig.backend !== "none") {
+    const message =
+      created > 0 || updated > 0
+        ? `✅ ${created > 0 ? `${created} événement${created > 1 ? "s" : ""} créé${created > 1 ? "s" : ""}` : ""}${
+            created > 0 && updated > 0 ? ", " : ""
+          }${updated > 0 ? `${updated} événement${updated > 1 ? "s" : ""} mis à jour` : ""}`
+        : `ℹ️ Aucun changement (${unchanged} événement${unchanged > 1 ? "s" : ""} inchangé${unchanged > 1 ? "s" : ""})`;
+    await sendNotification(notifyConfig, {
+      title: "📅 Sync MDR → iCloud",
+      message,
+      created,
+      updated,
+      unchanged,
+    });
+  }
 }
 
 main().catch((err) => {
   console.error("[FATAL]", err);
   process.exitCode = 1;
 });
-
-

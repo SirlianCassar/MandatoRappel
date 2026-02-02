@@ -2,13 +2,13 @@ name: Sync MDR matches to iCloud (CalDAV)
 
 on:
   schedule:
-    # GitHub cron = UTC. Pour couvrir l'heure d'été/hiver Europe/Paris,
-    # on déclenche à 11:00 et 12:00 UTC puis le script "gate" sur 13h Europe/Paris.
-    - cron: "0 11,12 * * *"
+    # GitHub cron = UTC. Un seul run par jour.
+    # 10:00 UTC = midi Europe/Paris en été (CEST). En hiver, ce sera 11:00 Paris.
+    - cron: "0 10 * * *"
   workflow_dispatch:
     inputs:
       force_run:
-        description: "Exécuter la sync immédiatement (ignore le gating 13h Europe/Paris)"
+        description: "Exécuter la sync immédiatement (optionnel)"
         required: false
         default: "false"
       dry_run:
@@ -23,10 +23,6 @@ on:
         description: "Compléter les matchs manquants via Liquipedia (officiel prioritaire)"
         required: false
         default: "true"
-      icloud_calendar_name:
-        description: "Nom exact du calendrier iCloud cible (ex: Matchs Mandatory)"
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -38,8 +34,7 @@ jobs:
       ICLOUD_USERNAME: ${{ secrets.ICLOUD_USERNAME }}
       ICLOUD_APP_PASSWORD: ${{ secrets.ICLOUD_APP_PASSWORD }}
       TEAM_NAME: ${{ secrets.TEAM_NAME }}
-      # Peut être défini en Repository Variable (recommandé) ou Secret, ou en input manuel
-      ICLOUD_CALENDAR_NAME: ${{ inputs.icloud_calendar_name || vars.ICLOUD_CALENDAR_NAME || secrets.ICLOUD_CALENDAR_NAME }}
+      ICLOUD_CALENDAR_NAME: "Matchs Mandatory"
       TZ: Europe/Paris
       FORCE_RUN: ${{ inputs.force_run }}
       DRY_RUN: ${{ inputs.dry_run }}
@@ -79,4 +74,11 @@ jobs:
           git commit -m "chore(state): update processed matches"
           git push
 
-
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 📅 Synchronisation MDR → iCloud" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Workflow exécuté le $(date '+%d/%m/%Y à %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Consultez les logs ci-dessus pour voir les événements créés/modifiés." >> $GITHUB_STEP_SUMMARY
