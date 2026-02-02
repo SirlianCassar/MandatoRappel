@@ -3,39 +3,43 @@
   "events": {
     "evt-9f04ba8597144081": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-9f04ba8597144081.ics",
-      "etag": "\"mk91o8kk\"",
+      "etag": "\"mk91o8kl\"",
       "uid": "evt-9f04ba8597144081",
       "matchId": "mdr-3e22852b666008cf",
       "payload": {
         "summary": "MDR VS JL",
         "location": "BO3 — Challengers France • Semaine 2",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-01-16T20:00:00.000Z",
-        "endUtcIso": "2026-01-16T22:00:00.000Z",
+        "officialStartUtcIso": "2026-01-16T20:00:00.000Z",
+        "officialEndUtcIso": "2026-01-16T22:00:00.000Z",
+        "startUtcIso": "2026-01-16T19:30:00.000Z",
+        "endUtcIso": "2026-01-16T23:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-11T01:17:43.160Z"
+      "lastSeenUtcIso": "2026-01-15T12:52:07.421Z"
     },
     "evt-ee01ad59c471c927": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-ee01ad59c471c927.ics",
-      "etag": "\"mk91o822\"",
+      "etag": "\"mk9278ek\"",
       "uid": "evt-ee01ad59c471c927",
       "matchId": "mdr-a665cb31a38d349d",
       "payload": {
         "summary": "MDR VS GL",
         "location": "BO3 — Challengers France • Semaine 1",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-01-11T17:00:00.000Z",
-        "endUtcIso": "2026-01-11T19:00:00.000Z",
+        "officialStartUtcIso": "2026-01-11T17:00:00.000Z",
+        "officialEndUtcIso": "2026-01-11T19:00:00.000Z",
+        "startUtcIso": "2026-01-11T16:30:00.000Z",
+        "endUtcIso": "2026-01-11T20:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
           "minus1Day": false
         }
       },
-      "lastSeenUtcIso": "2026-01-11T01:17:42.417Z"
+      "lastSeenUtcIso": "2026-01-11T12:45:36.702Z"
     },
     "evt-53cd53ae3b779022": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/3578a63d-b850-459f-b8f6-855beab690f6/evt-53cd53ae3b779022.ics",
@@ -56,85 +60,93 @@
     },
     "evt-35f0572dc2fa4332": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-35f0572dc2fa4332.ics",
-      "etag": "\"mk91o90b\"",
+      "etag": "\"mk91o90d\"",
       "uid": "evt-35f0572dc2fa4332",
       "matchId": "mdr-15da6675ca29fd4f",
       "payload": {
         "summary": "MDR VS F9",
         "location": "BO3 — Challengers France • Semaine 2",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-01-18T17:00:00.000Z",
-        "endUtcIso": "2026-01-18T19:00:00.000Z",
+        "officialStartUtcIso": "2026-01-18T17:00:00.000Z",
+        "officialEndUtcIso": "2026-01-18T19:00:00.000Z",
+        "startUtcIso": "2026-01-18T16:30:00.000Z",
+        "endUtcIso": "2026-01-18T20:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
-          "minus1Day": true
+          "minus1Day": false
         }
       },
-      "lastSeenUtcIso": "2026-01-11T01:17:43.643Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:18.922Z"
     },
     "evt-94ee4fc9bbcc4701": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-94ee4fc9bbcc4701.ics",
-      "etag": "\"mk91o9f4\"",
+      "etag": "\"mk91o9f5\"",
       "uid": "evt-94ee4fc9bbcc4701",
       "matchId": "mdr-dc0ad8c8a17e3f6f",
       "payload": {
         "summary": "MDR VS ERAH",
         "location": "BO3 — Challengers France • Semaine 3",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-01-24T14:00:00.000Z",
-        "endUtcIso": "2026-01-24T16:00:00.000Z",
+        "officialStartUtcIso": "2026-01-24T14:00:00.000Z",
+        "officialEndUtcIso": "2026-01-24T16:00:00.000Z",
+        "startUtcIso": "2026-01-24T13:30:00.000Z",
+        "endUtcIso": "2026-01-24T17:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-11T01:17:44.186Z"
+      "lastSeenUtcIso": "2026-01-23T12:53:13.221Z"
     },
     "evt-cffc98c6c8110e6f": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-cffc98c6c8110e6f.ics",
-      "etag": "\"mk91o9t8\"",
+      "etag": "\"mk91o9t9\"",
       "uid": "evt-cffc98c6c8110e6f",
       "matchId": "mdr-72d0c55e8304f493",
       "payload": {
         "summary": "MDR VS CLA",
         "location": "BO3 — Challengers France • Semaine 3",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-01-25T14:00:00.000Z",
-        "endUtcIso": "2026-01-25T16:00:00.000Z",
+        "officialStartUtcIso": "2026-01-25T14:00:00.000Z",
+        "officialEndUtcIso": "2026-01-25T16:00:00.000Z",
+        "startUtcIso": "2026-01-25T13:30:00.000Z",
+        "endUtcIso": "2026-01-25T17:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-11T01:17:44.778Z"
+      "lastSeenUtcIso": "2026-01-23T12:53:13.338Z"
     },
     "evt-403543ee0a5d6029": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-403543ee0a5d6029.ics",
-      "etag": "\"mk91oa93\"",
+      "etag": "\"mk91oa94\"",
       "uid": "evt-403543ee0a5d6029",
       "matchId": "mdr-91c480dd0714544b",
       "payload": {
         "summary": "MDR VS WIP",
         "location": "BO3 — Challengers France • Semaine 4",
         "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
-        "startUtcIso": "2026-02-01T17:00:00.000Z",
-        "endUtcIso": "2026-02-01T19:00:00.000Z",
+        "officialStartUtcIso": "2026-02-01T17:00:00.000Z",
+        "officialEndUtcIso": "2026-02-01T19:00:00.000Z",
+        "startUtcIso": "2026-02-01T16:30:00.000Z",
+        "endUtcIso": "2026-02-01T20:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-01-11T01:17:45.255Z"
+      "lastSeenUtcIso": "2026-01-28T12:56:21.166Z"
     }
   },
   "matchIdIndex": {
     "mdr-3e22852b666008cf": {
       "eventKey": "evt-9f04ba8597144081",
-      "lastSeenUtcIso": "2026-01-11T01:17:43.160Z"
+      "lastSeenUtcIso": "2026-01-15T12:52:07.421Z"
     },
     "mdr-a665cb31a38d349d": {
       "eventKey": "evt-ee01ad59c471c927",
-      "lastSeenUtcIso": "2026-01-11T01:17:42.417Z"
+      "lastSeenUtcIso": "2026-01-11T12:45:36.702Z"
     },
     "mdr-dead4410082ec7e1": {
       "eventKey": "evt-53cd53ae3b779022",
@@ -142,19 +154,19 @@
     },
     "mdr-15da6675ca29fd4f": {
       "eventKey": "evt-35f0572dc2fa4332",
-      "lastSeenUtcIso": "2026-01-11T01:17:43.643Z"
+      "lastSeenUtcIso": "2026-01-18T12:44:18.922Z"
     },
     "mdr-dc0ad8c8a17e3f6f": {
       "eventKey": "evt-94ee4fc9bbcc4701",
-      "lastSeenUtcIso": "2026-01-11T01:17:44.186Z"
+      "lastSeenUtcIso": "2026-01-23T12:53:13.221Z"
     },
     "mdr-72d0c55e8304f493": {
       "eventKey": "evt-cffc98c6c8110e6f",
-      "lastSeenUtcIso": "2026-01-11T01:17:44.778Z"
+      "lastSeenUtcIso": "2026-01-23T12:53:13.338Z"
     },
     "mdr-91c480dd0714544b": {
       "eventKey": "evt-403543ee0a5d6029",
-      "lastSeenUtcIso": "2026-01-11T01:17:45.255Z"
+      "lastSeenUtcIso": "2026-01-28T12:56:21.166Z"
     }
   }
 }
