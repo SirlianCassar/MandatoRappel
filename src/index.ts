@@ -12,7 +12,6 @@ import { readState, writeState } from "./state.js";
 import type { MatchPayload, ScrapedMatch, StateV1 } from "./types.js";
 import { deepEqual, nowUtcIso, stableEventKeyFromSource, stableMatchId } from "./util.js";
 import { scrapeMdrMatches } from "./scrape.js";
-import { scrapeLiquipediaUpcomingMatches } from "./liquipedia.js";
 import { parseNotificationConfig, sendNotification } from "./notify.js";
 
 function buildPayload(match: ScrapedMatch, teamName: string, nowUtc: DateTime, existing?: MatchPayload): MatchPayload {
@@ -128,38 +127,7 @@ export async function main(): Promise<void> {
 
   console.log(`[INFO] Scraping des matchs pour l'équipe: ${teamName}`);
   const official = await scrapeMdrMatches({ teamName });
-  let scraped = official;
-
-  if (env.useLiquipedia) {
-    try {
-      const liq = await scrapeLiquipediaUpcomingMatches({
-        teamCode: teamName,
-        url: env.LIQUIPEDIA_URL,
-      });
-      // Merge: l'officiel est prioritaire.
-      // Si un match officiel existe déjà au même horaire, on ignore Liquipedia (évite les doublons
-      // en cas de divergences d'acronymes adverses: ex CAL vs CLA).
-      const officialByStart = new Map<string, ScrapedMatch>();
-      for (const m of official) officialByStart.set(m.startUtcIso, m);
-
-      const extra = liq.filter((m) => {
-        const off = officialByStart.get(m.startUtcIso);
-        if (!off) return true;
-        if (off.opponentName !== m.opponentName) {
-          console.warn(
-            `[WARN] Conflit Liquipedia ignoré (officiel prioritaire): ${m.startUtcIso} officiel=${off.opponentName} liquipedia=${m.opponentName}`
-          );
-        }
-        return false;
-      });
-      if (extra.length > 0) {
-        console.log(`[INFO] Liquipedia: +${extra.length} matchs ajoutés (complément de l'officiel).`);
-      }
-      scraped = official.concat(extra);
-    } catch (e) {
-      console.warn(`[WARN] Liquipedia désactivé (erreur): ${String(e)}`);
-    }
-  }
+  const scraped = official;
   console.log(`[INFO] Matchs bruts récupérés: ${scraped.length}`);
 
   // Migration: si un même eventKey est référencé par plusieurs matchId,

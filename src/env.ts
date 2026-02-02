@@ -9,15 +9,12 @@ const EnvSchema = z.object({
   DRY_RUN: z.string().optional(),
   FORCE_RUN: z.string().optional(),
   DEBUG_SCRAPE: z.string().optional(),
-  USE_LIQUIPEDIA: z.string().optional(),
-  LIQUIPEDIA_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema> & {
   dryRun: boolean;
   forceRun: boolean;
   debugScrape: boolean;
-  useLiquipedia: boolean;
 };
 
 function isTruthy(value?: string): boolean {
@@ -37,7 +34,5 @@ export function readEnv(): Env {
     dryRun: isTruthy(parsed.data.DRY_RUN),
     forceRun: isTruthy(parsed.data.FORCE_RUN),
     debugScrape: isTruthy(parsed.data.DEBUG_SCRAPE),
-    useLiquipedia: isTruthy(parsed.data.USE_LIQUIPEDIA),
   };
 }
-
