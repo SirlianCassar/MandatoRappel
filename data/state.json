@@ -160,6 +160,26 @@
         }
       },
       "lastSeenUtcIso": "2026-02-07T10:18:10.063Z"
+    },
+    "evt-ff63c38d57c2e068": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-ff63c38d57c2e068.ics",
+      "etag": "\"mldlbfwh\"",
+      "uid": "evt-ff63c38d57c2e068",
+      "matchId": "mdr-e834c15bb70e1bd4",
+      "payload": {
+        "summary": "MDR VS JL",
+        "location": "BO3 — Challengers France • Play-offs",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-02-08T16:00:00.000Z",
+        "officialEndUtcIso": "2026-02-08T18:00:00.000Z",
+        "startUtcIso": "2026-02-08T15:30:00.000Z",
+        "endUtcIso": "2026-02-08T19:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": false
+        }
+      },
+      "lastSeenUtcIso": "2026-02-08T10:18:25.428Z"
     }
   },
   "matchIdIndex": {
@@ -194,6 +214,10 @@
     "mdr-343820c09ff9b27a": {
       "eventKey": "evt-53cd53ae3b779022",
       "lastSeenUtcIso": "2026-02-02T13:56:36.998Z"
+    },
+    "mdr-e834c15bb70e1bd4": {
+      "eventKey": "evt-ff63c38d57c2e068",
+      "lastSeenUtcIso": "2026-02-08T10:18:25.428Z"
     }
   }
 }
