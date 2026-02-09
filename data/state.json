@@ -180,6 +180,26 @@
         }
       },
       "lastSeenUtcIso": "2026-02-08T10:18:25.428Z"
+    },
+    "evt-f34236c9caa1300f": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-f34236c9caa1300f.ics",
+      "etag": "\"mlf1wqoe\"",
+      "uid": "evt-f34236c9caa1300f",
+      "matchId": "mdr-1aa068efc9a266f4",
+      "payload": {
+        "summary": "MDR VS WIP",
+        "location": "BO5 — Challengers France • Play-offs",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-02-09T17:00:00.000Z",
+        "officialEndUtcIso": "2026-02-09T19:00:00.000Z",
+        "startUtcIso": "2026-02-09T16:30:00.000Z",
+        "endUtcIso": "2026-02-09T20:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": false
+        }
+      },
+      "lastSeenUtcIso": "2026-02-09T10:50:39.211Z"
     }
   },
   "matchIdIndex": {
@@ -218,6 +238,10 @@
     "mdr-e834c15bb70e1bd4": {
       "eventKey": "evt-ff63c38d57c2e068",
       "lastSeenUtcIso": "2026-02-08T10:18:25.428Z"
+    },
+    "mdr-1aa068efc9a266f4": {
+      "eventKey": "evt-f34236c9caa1300f",
+      "lastSeenUtcIso": "2026-02-09T10:50:39.211Z"
     }
   }
 }
