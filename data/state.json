@@ -200,6 +200,26 @@
         }
       },
       "lastSeenUtcIso": "2026-02-09T10:50:39.211Z"
+    },
+    "evt-3cf48bd4fdb34293": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-3cf48bd4fdb34293.ics",
+      "etag": "\"mlgh7b1d\"",
+      "uid": "evt-3cf48bd4fdb34293",
+      "matchId": "mdr-710d4e366dd10aad",
+      "payload": {
+        "summary": "MDR VS JL",
+        "location": "BO5 — Challengers France • Finale",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-02-11T17:00:00.000Z",
+        "officialEndUtcIso": "2026-02-11T19:00:00.000Z",
+        "startUtcIso": "2026-02-11T16:30:00.000Z",
+        "endUtcIso": "2026-02-11T20:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-02-10T10:46:32.558Z"
     }
   },
   "matchIdIndex": {
@@ -242,6 +262,10 @@
     "mdr-1aa068efc9a266f4": {
       "eventKey": "evt-f34236c9caa1300f",
       "lastSeenUtcIso": "2026-02-09T10:50:39.211Z"
+    },
+    "mdr-710d4e366dd10aad": {
+      "eventKey": "evt-3cf48bd4fdb34293",
+      "lastSeenUtcIso": "2026-02-10T10:46:32.558Z"
     }
   }
 }
