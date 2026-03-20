@@ -220,6 +220,46 @@
         }
       },
       "lastSeenUtcIso": "2026-02-11T10:41:35.334Z"
+    },
+    "evt-7b15d8fa424044b9": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-7b15d8fa424044b9.ics",
+      "etag": "\"mmyrd4l8\"",
+      "uid": "evt-7b15d8fa424044b9",
+      "matchId": "mdr-156bedee69febaaf",
+      "payload": {
+        "summary": "MDR VS GNG",
+        "location": "BO3 — Challengers EMEA • Groupes",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-03-21T18:30:00.000Z",
+        "officialEndUtcIso": "2026-03-21T20:30:00.000Z",
+        "startUtcIso": "2026-03-21T18:00:00.000Z",
+        "endUtcIso": "2026-03-21T21:30:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-03-20T10:30:33.900Z"
+    },
+    "evt-ce0e86064f9beafe": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-ce0e86064f9beafe.ics",
+      "etag": "\"mmyrd552\"",
+      "uid": "evt-ce0e86064f9beafe",
+      "matchId": "mdr-acc8181450680018",
+      "payload": {
+        "summary": "MDR VS S2G",
+        "location": "BO3 — Challengers EMEA • Groupes",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-03-22T16:00:00.000Z",
+        "officialEndUtcIso": "2026-03-22T18:00:00.000Z",
+        "startUtcIso": "2026-03-22T15:30:00.000Z",
+        "endUtcIso": "2026-03-22T19:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-03-20T10:30:34.599Z"
     }
   },
   "matchIdIndex": {
@@ -266,6 +306,14 @@
     "mdr-710d4e366dd10aad": {
       "eventKey": "evt-3cf48bd4fdb34293",
       "lastSeenUtcIso": "2026-02-11T10:41:35.334Z"
+    },
+    "mdr-156bedee69febaaf": {
+      "eventKey": "evt-7b15d8fa424044b9",
+      "lastSeenUtcIso": "2026-03-20T10:30:33.900Z"
+    },
+    "mdr-acc8181450680018": {
+      "eventKey": "evt-ce0e86064f9beafe",
+      "lastSeenUtcIso": "2026-03-20T10:30:34.599Z"
     }
   }
 }
