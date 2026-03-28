@@ -260,6 +260,26 @@
         }
       },
       "lastSeenUtcIso": "2026-03-20T10:30:34.599Z"
+    },
+    "evt-9e4c2c76e1c505fa": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-9e4c2c76e1c505fa.ics",
+      "etag": "\"mna6nop7\"",
+      "uid": "evt-9e4c2c76e1c505fa",
+      "matchId": "mdr-ff9ac0a112745dfb",
+      "payload": {
+        "summary": "MDR VS UCAM",
+        "location": "BO5 — Challengers EMEA • Play-offs",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-03-28T16:00:00.000Z",
+        "officialEndUtcIso": "2026-03-28T18:00:00.000Z",
+        "startUtcIso": "2026-03-28T15:30:00.000Z",
+        "endUtcIso": "2026-03-28T19:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": false
+        }
+      },
+      "lastSeenUtcIso": "2026-03-28T10:24:08.612Z"
     }
   },
   "matchIdIndex": {
@@ -314,6 +334,10 @@
     "mdr-acc8181450680018": {
       "eventKey": "evt-ce0e86064f9beafe",
       "lastSeenUtcIso": "2026-03-20T10:30:34.599Z"
+    },
+    "mdr-ff9ac0a112745dfb": {
+      "eventKey": "evt-9e4c2c76e1c505fa",
+      "lastSeenUtcIso": "2026-03-28T10:24:08.612Z"
     }
   }
 }
