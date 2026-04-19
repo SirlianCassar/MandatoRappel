@@ -343,7 +343,7 @@
     },
     "evt-cddf8f98f61d206d": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-cddf8f98f61d206d.ics",
-      "etag": "\"mnfx9c6h\"",
+      "etag": "\"mnfx9c6j\"",
       "uid": "evt-cddf8f98f61d206d",
       "matchId": "mdr-0826b5bac53d46a8",
       "payload": {
@@ -356,10 +356,10 @@
         "endUtcIso": "2026-04-19T22:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
-          "minus1Day": true
+          "minus1Day": false
         }
       },
-      "lastSeenUtcIso": "2026-04-18T10:33:23.453Z"
+      "lastSeenUtcIso": "2026-04-19T10:32:38.468Z"
     },
     "evt-97e94022a6cf981a": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-97e94022a6cf981a.ics",
@@ -379,7 +379,7 @@
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-04-17T10:47:42.076Z"
+      "lastSeenUtcIso": "2026-04-19T10:32:38.660Z"
     },
     "evt-dc75a4ece0a75c19": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-dc75a4ece0a75c19.ics",
@@ -399,7 +399,7 @@
           "minus1Day": true
         }
       },
-      "lastSeenUtcIso": "2026-04-17T10:47:42.185Z"
+      "lastSeenUtcIso": "2026-04-19T10:32:38.863Z"
     }
   },
   "matchIdIndex": {
@@ -473,15 +473,15 @@
     },
     "mdr-0826b5bac53d46a8": {
       "eventKey": "evt-cddf8f98f61d206d",
-      "lastSeenUtcIso": "2026-04-18T10:33:23.453Z"
+      "lastSeenUtcIso": "2026-04-19T10:32:38.468Z"
     },
     "mdr-97972cdd1e31a824": {
       "eventKey": "evt-97e94022a6cf981a",
-      "lastSeenUtcIso": "2026-04-17T10:47:42.076Z"
+      "lastSeenUtcIso": "2026-04-19T10:32:38.660Z"
     },
     "mdr-34f449068e47b7e9": {
       "eventKey": "evt-dc75a4ece0a75c19",
-      "lastSeenUtcIso": "2026-04-17T10:47:42.185Z"
+      "lastSeenUtcIso": "2026-04-19T10:32:38.863Z"
     }
   }
 }
