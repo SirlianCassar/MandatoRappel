@@ -383,7 +383,7 @@
     },
     "evt-dc75a4ece0a75c19": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-dc75a4ece0a75c19.ics",
-      "etag": "\"mnfx9cu2\"",
+      "etag": "\"mnfx9cu4\"",
       "uid": "evt-dc75a4ece0a75c19",
       "matchId": "mdr-34f449068e47b7e9",
       "payload": {
@@ -396,10 +396,10 @@
         "endUtcIso": "2026-04-26T22:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
-          "minus1Day": true
+          "minus1Day": false
         }
       },
-      "lastSeenUtcIso": "2026-04-25T10:37:05.428Z"
+      "lastSeenUtcIso": "2026-04-26T10:38:38.779Z"
     }
   },
   "matchIdIndex": {
@@ -481,7 +481,7 @@
     },
     "mdr-34f449068e47b7e9": {
       "eventKey": "evt-dc75a4ece0a75c19",
-      "lastSeenUtcIso": "2026-04-25T10:37:05.428Z"
+      "lastSeenUtcIso": "2026-04-26T10:38:38.779Z"
     }
   }
 }
