@@ -400,6 +400,26 @@
         }
       },
       "lastSeenUtcIso": "2026-04-26T10:38:38.779Z"
+    },
+    "evt-2fd95ae3bcdffe14": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-2fd95ae3bcdffe14.ics",
+      "etag": "\"molebd0c\"",
+      "uid": "evt-2fd95ae3bcdffe14",
+      "matchId": "mdr-d95c43cd77ba38e1",
+      "payload": {
+        "summary": "MDR VS F9",
+        "location": "BO3 — Challengers France • Play-offs",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-05-03T19:00:00.000Z",
+        "officialEndUtcIso": "2026-05-03T21:00:00.000Z",
+        "startUtcIso": "2026-05-03T18:30:00.000Z",
+        "endUtcIso": "2026-05-03T22:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-04-30T11:23:40.773Z"
     }
   },
   "matchIdIndex": {
@@ -482,6 +502,10 @@
     "mdr-34f449068e47b7e9": {
       "eventKey": "evt-dc75a4ece0a75c19",
       "lastSeenUtcIso": "2026-04-26T10:38:38.779Z"
+    },
+    "mdr-d95c43cd77ba38e1": {
+      "eventKey": "evt-2fd95ae3bcdffe14",
+      "lastSeenUtcIso": "2026-04-30T11:23:40.773Z"
     }
   }
 }
