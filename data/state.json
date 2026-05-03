@@ -403,7 +403,7 @@
     },
     "evt-2fd95ae3bcdffe14": {
       "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-2fd95ae3bcdffe14.ics",
-      "etag": "\"molebd0c\"",
+      "etag": "\"molebd0d\"",
       "uid": "evt-2fd95ae3bcdffe14",
       "matchId": "mdr-d95c43cd77ba38e1",
       "payload": {
@@ -416,10 +416,10 @@
         "endUtcIso": "2026-05-03T22:00:00.000Z",
         "alarms": {
           "minus1Hour": true,
-          "minus1Day": true
+          "minus1Day": false
         }
       },
-      "lastSeenUtcIso": "2026-05-02T10:43:30.193Z"
+      "lastSeenUtcIso": "2026-05-03T10:46:15.473Z"
     }
   },
   "matchIdIndex": {
@@ -505,7 +505,7 @@
     },
     "mdr-d95c43cd77ba38e1": {
       "eventKey": "evt-2fd95ae3bcdffe14",
-      "lastSeenUtcIso": "2026-05-02T10:43:30.193Z"
+      "lastSeenUtcIso": "2026-05-03T10:46:15.473Z"
     }
   }
 }
