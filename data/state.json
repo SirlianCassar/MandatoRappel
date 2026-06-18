@@ -440,6 +440,26 @@
         }
       },
       "lastSeenUtcIso": "2026-05-04T11:43:18.852Z"
+    },
+    "evt-d06930fe7d45565a": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-d06930fe7d45565a.ics",
+      "etag": "\"mqjhu8or\"",
+      "uid": "evt-d06930fe7d45565a",
+      "matchId": "mdr-6af9d7c79b3d07b6",
+      "payload": {
+        "summary": "MDR VS QAD",
+        "location": "BO3 — Challengers EMEA • Groupes",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-06-23T15:00:00.000Z",
+        "officialEndUtcIso": "2026-06-23T17:00:00.000Z",
+        "startUtcIso": "2026-06-23T14:30:00.000Z",
+        "endUtcIso": "2026-06-23T18:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-06-18T12:46:12.807Z"
     }
   },
   "matchIdIndex": {
@@ -530,6 +550,10 @@
     "mdr-10c926406974ef03": {
       "eventKey": "evt-f34236c9caa1300f",
       "lastSeenUtcIso": "2026-05-05T11:11:53.143Z"
+    },
+    "mdr-6af9d7c79b3d07b6": {
+      "eventKey": "evt-d06930fe7d45565a",
+      "lastSeenUtcIso": "2026-06-18T12:46:12.807Z"
     }
   }
 }
