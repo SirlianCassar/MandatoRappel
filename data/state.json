@@ -460,6 +460,26 @@
         }
       },
       "lastSeenUtcIso": "2026-06-20T11:51:16.855Z"
+    },
+    "evt-912fee19382e1013": {
+      "href": "https://p163-caldav.icloud.com/17882463282/calendars/52CBADCB-8E86-470A-80E3-9DA955D34C3B/evt-912fee19382e1013.ics",
+      "etag": "\"mquvz3si\"",
+      "uid": "evt-912fee19382e1013",
+      "matchId": "mdr-1d707ffbc3967963",
+      "payload": {
+        "summary": "MDR VS BJK",
+        "location": "BO3 — Challengers EMEA • Groupes",
+        "description": "https://www.twitch.tv/zerator\nhttps://valorantesports.com/fr-FR/",
+        "officialStartUtcIso": "2026-06-29T15:00:00.000Z",
+        "officialEndUtcIso": "2026-06-29T17:00:00.000Z",
+        "startUtcIso": "2026-06-29T14:30:00.000Z",
+        "endUtcIso": "2026-06-29T18:00:00.000Z",
+        "alarms": {
+          "minus1Hour": true,
+          "minus1Day": true
+        }
+      },
+      "lastSeenUtcIso": "2026-06-26T12:07:22.343Z"
     }
   },
   "matchIdIndex": {
@@ -554,6 +574,10 @@
     "mdr-6af9d7c79b3d07b6": {
       "eventKey": "evt-d06930fe7d45565a",
       "lastSeenUtcIso": "2026-06-20T11:51:16.855Z"
+    },
+    "mdr-1d707ffbc3967963": {
+      "eventKey": "evt-912fee19382e1013",
+      "lastSeenUtcIso": "2026-06-26T12:07:22.343Z"
     }
   }
 }
