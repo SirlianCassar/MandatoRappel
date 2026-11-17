@@ -1,178 +1,139 @@
-## MandatoRappel — Sync des matchs MDR vers iCloud (CalDAV)
+# MandatoRappel v2
 
-Ce dépôt exécute **tous les jours à midi (Europe/Paris)** un script qui :
+Synchronise automatiquement les matchs Valorant de **MDR** (Challengers France) dans un calendrier iCloud, et t'envoie des notifications push sur iPhone : nouveau match, match déplacé, résultat, panne.
 
-- scrape `https://valorantesports.com/fr-FR/` avec **Playwright** (site dynamique)
-- détecte uniquement les **matchs complets** de l’équipe **MDR**
-- crée / met à jour automatiquement les événements dans **Calendrier iCloud (CalDAV)**
-- persiste un état dans `data/state.json` pour éviter les doublons et gérer les mises à jour
+## Ce qui change par rapport à la v1
 
-## Règles métier appliquées
+| | v1 | v2 |
+|---|---|---|
+| Source | Navigateur Playwright qui clique sur le site | **API JSON officielle** du site (simple requête HTTP), navigateur seulement en secours |
+| Durée d'un run | ~1–2 min | quelques secondes |
+| Fréquence | 1 fois/jour (souvent décalé de plusieurs heures) | **toutes les heures** de 7h à 23h |
+| Runner | `ubuntu-latest` (cassé par Ubuntu 26.04) | `ubuntu-24.04` figé |
+| Notifications | « 2 événements créés » chaque jour | Détaillées par match, aucune notif si rien ne change |
+| Pannes | Silencieuses | Alerte push (1 fois par jour max) |
+| Matchs annulés | Restent dans le calendrier | Supprimés (après 3 vérifications) + notif |
+| Résultats | — | Titre mis à jour `✅ MDR 2–1 Joblife` + notif |
+| État | Commité sur `main` avec tes URL iCloud | Branche `state` séparée, aucune donnée iCloud |
 
-Un match est **ajouté / synchronisé** uniquement si :
+## Format des événements
 
-- **MDR** est l’une des deux équipes (`TEAM_NAME`)
-- **l’adversaire est connu** (≠ `TBD`, ≠ vide)
-- **la date et l’heure sont définies**
-- **le tournoi est défini** (sinon match considéré incomplet)
+- **Titre** : `MDR vs Joblife`, puis `✅ MDR 2–1 Joblife` / `❌ MDR 0–2 Joblife` une fois joué
+- **Lieu** : `Challengers France · Semaine 4 · BO3`
+- **Horaires** : début 30 min avant le match ; fin estimée selon le format (BO1 ≈ 1 h, BO3 ≈ 2 h 30, BO5 ≈ 4 h) + 30 min
+- **Rappels** : 1 jour avant et 1 heure avant l'heure officielle
+- **Notes** : compétition, format, heure officielle, adversaire et son bilan, liens Twitch et site officiel
+- **URL** : le stream Twitch (tap direct depuis l'app Calendrier)
 
-Ne jamais ajouter :
+## Installation
 
-- match sans adversaire
-- match incomplet
-- doublon
+### 1. Secrets (Settings → Secrets and variables → Actions → *Secrets*)
 
-## Format exact des événements iCloud
+| Secret | Valeur |
+|---|---|
+| `ICLOUD_USERNAME` | Ton identifiant Apple (e-mail) |
+| `ICLOUD_APP_PASSWORD` | Un [mot de passe pour app](https://account.apple.com) (Connexion et sécurité → Mots de passe pour app) |
 
-- **Titre** : `MDR VS ADVERSAIRE`
-- **Lieu** : `BOx — NOM DU TOURNOI` (BO affiché uniquement si connu, sinon uniquement le tournoi)
-- **Notes** (strictement 2 lignes) :
+### 2. Variables (même écran, onglet *Variables*) — toutes optionnelles
 
+| Variable | Défaut | Rôle |
+|---|---|---|
+| `ICLOUD_CALENDAR_NAME` | `Matchs Mandatory` | Calendrier cible (doit exister et être modifiable) |
+| `TEAM_NAME` | `MDR` | Code de l'équipe suivie |
+| `TEAM_ALIASES` | `Mandatory` | Autres noms de l'équipe, séparés par des virgules |
+| `LEAGUES` | `Challengers France` | Ligues à surveiller, séparées par des virgules (ex. `Challengers France,Ascension EMEA`) |
+| `LEAGUE_IDS` | — | IDs de ligue Riot, pour forcer la sélection |
+| `STREAM_URL` | `https://www.twitch.tv/zerator` | Lien du stream |
+| `NOTIFY_RESULTS` | `true` | Notifier les résultats |
+| `NOTIFY_BACKENDS` | — | Services de notification, ex. `ntfy` ou `ntfy,pushcut` |
+
+### 3. Désactiver la v1
+
+Dans l'ancien dépôt : **Actions → Sync MDR matches to iCloud → ⋯ → Disable workflow**. Sinon les deux versions écrivent dans le même calendrier.
+
+Au premier lancement, la v2 remplace les événements **à venir** créés par la v1 (même heure de match) par les siens. Les matchs passés ne sont pas touchés.
+
+### 4. Lancer
+
+**Actions → Sync MDR → iCloud → Run workflow**. Coche « Essai à blanc » pour un premier test sans rien écrire.
+
+## Notifications push
+
+### ntfy (recommandé : gratuit, sans compte)
+
+1. Installe l'app **ntfy** (App Store) sur l'iPhone.
+2. Abonne-toi à un sujet au nom long et imprévisible (ex. `mdr-sirlian-8f3k2q9x`) : sur ntfy.sh, quiconque connaît le nom peut lire le sujet.
+3. Secret `NOTIFY_NTFY_TOPIC` = ce nom ; variable `NOTIFY_BACKENDS` = `ntfy`.
+4. Lance le workflow avec **« Envoyer seulement une notification de test »**.
+
+Chaque notification ouvre Twitch au tap, avec un bouton « Ouvrir Twitch ».
+
+### Pushcut (pour l'app Raccourcis)
+
+Secrets `NOTIFY_PUSHCUT_API_KEY` et `NOTIFY_PUSHCUT_NOTIFICATION_KEY` (nom de la notification Pushcut), ajoute `pushcut` à `NOTIFY_BACKENDS`.
+
+La notification transmet au raccourci associé un JSON en entrée :
+
+```json
+{
+  "kind": "new",
+  "title": "🆕 MDR vs Joblife",
+  "body": "Demain à 20:00 · BO3\nChallengers France · Semaine 4",
+  "url": "https://www.twitch.tv/zerator",
+  "match": { "id": "…", "start": "2026-11-13T19:00:00.000Z", "opponent": "Joblife", "opponentCode": "JL", "bestOf": 3, "competition": "Challengers France · Semaine 4", "status": "upcoming", "score": null, "outcome": null }
+}
 ```
-https://www.twitch.tv/zerator
-https://valorantesports.com/fr-FR/
+
+`kind` vaut `new`, `rescheduled`, `updated`, `result`, `removed`, `digest`, `error`, `fallback` ou `test`. Dans Raccourcis : *Obtenir le dictionnaire depuis l'entrée*, puis par exemple *Si kind est result* → *Énoncer le texte*.
+
+### Autres services
+
+| Service | Secrets | `NOTIFY_BACKENDS` |
+|---|---|---|
+| Pushover | `NOTIFY_PUSHOVER_API_TOKEN`, `NOTIFY_PUSHOVER_USER_KEY` | `pushover` |
+| Telegram | `NOTIFY_TELEGRAM_BOT_TOKEN`, `NOTIFY_TELEGRAM_CHAT_ID` | `telegram` |
+| Discord | `NOTIFY_DISCORD_WEBHOOK_URL` | `discord` |
+| Webhook (IFTTT, Zapier…) | `NOTIFY_WEBHOOK_URL` | `webhook` |
+
+Pour ntfy auto-hébergé : variable `NOTIFY_NTFY_SERVER` et secret `NOTIFY_NTFY_TOKEN`.
+
+## Raccourci « Quand joue MDR ? » (sans rien configurer)
+
+Dans Raccourcis : *Rechercher des événements du calendrier* (calendrier « Matchs Mandatory », date de début après maintenant, trier par date de début, limite 1) → *Énoncer* le titre et la date. Nomme-le « Quand joue MDR » pour le lancer avec Siri.
+
+Le workflow publie aussi `matches.json` (prochain match, matchs à venir, derniers résultats) sur la branche `state`. Si le dépôt est public, un raccourci peut le lire avec *Obtenir le contenu de l'URL* sur `https://raw.githubusercontent.com/<compte>/<dépôt>/state/matches.json`.
+
+## Fonctionnement
+
+1. Récupère les ligues puis le planning via l'API utilisée par valorantesports.com.
+2. Ne garde que les matchs de MDR avec un adversaire connu.
+3. Compare avec l'état (branche `state`) : crée, met à jour ou supprime les événements iCloud.
+4. Envoie les notifications, sauvegarde l'état (un seul commit, réécrit seulement si quelque chose change).
+
+Si l'API ne répond pas, le workflow installe Chromium et bascule sur le scraping de la v1, avec une notification « mode secours ». En mode secours, aucun match n'est supprimé.
+
+L'API n'est pas documentée publiquement. Si Riot la modifie, le secours prend le relais et tu es prévenu ; l'URL et la clé sont surchargeables (`RIOT_ESPORTS_API_BASE`, `RIOT_ESPORTS_API_KEY`).
+
+## Publier sur GitHub / envoyer une mise à jour
+
+Depuis ce dossier, dans le Terminal :
+
+```bash
+./publier.sh
 ```
 
-- **Rappels** :
-  - toujours **1 heure avant**
-  - **+ 1 jour avant** si le match n’est **pas aujourd’hui** (Europe/Paris)
+Le script envoie tout sur `SirlianCassar/MandatoRappel-v2` (le crée en privé si GitHub CLI est installé), et ne pousse que s'il y a des changements. Ça marche aussi depuis un nouveau .zip décompressé : il repart de la version en ligne.
 
-- **Décalage de l'événement** :
-  - l'heure de **début** est mise à **-30 minutes** de l'heure officielle
-  - l'heure de **fin** est mise à **+1 heure** par rapport à la fin officielle (durée officielle par défaut: 2h)
+- Message personnalisé : `./publier.sh "Ajout de l'Ascension EMEA"`
+- Autre dépôt : `REPO=SirlianCassar/MandatoRappel ./publier.sh`
 
-## Fonctionnement (dédup + mises à jour)
-
-- Le script calcule un **matchId “métier”** basé sur : **date/heure + MDR + adversaire + tournoi**
-- Il calcule aussi un **UID/clé d’événement stable** (basée sur l’URL du match quand disponible) pour garantir :
-  - mise à jour de l’événement si **date/heure/adversaire/BO/tournoi** change
-  - pas de création de doublons lors des changements
-
-L’état est stocké dans `data/state.json` et est **commité automatiquement** par GitHub Actions.
-
-## Configuration (GitHub Secrets)
-
-Dans votre repo GitHub : `Settings` → `Secrets and variables` → `Actions` → `New repository secret`
-
-- **ICLOUD_USERNAME** : votre identifiant iCloud (email Apple)
-- **ICLOUD_APP_PASSWORD** : mot de passe d’app spécifique iCloud (Apple ID → Sécurité)
-- **TEAM_NAME** : `MDR` (ou autre si vous voulez cibler une autre équipe)
-
-Optionnel (variable d'environnement) :
-
-- **ICLOUD_CALENDAR_NAME** : nom exact du calendrier iCloud à cibler (sinon : 1er calendrier détecté).  
-  Dans le workflow GitHub Actions, le calendrier est forcé à **Matchs Mandatory**.
-- **DRY_RUN** : `true` ou `1` pour tester sans écrire sur iCloud
-- **FORCE_RUN** : `true` ou `1` pour exécuter immédiatement (optionnel)
-- **DEBUG_SCRAPE** : `true` ou `1` pour afficher des logs utiles au debugging du scraping
-
-Note: pour `TEAM_NAME=MDR`, le scraper officiel applique automatiquement le filtre `Toutes les ligues → Challengers France`
-afin d'obtenir le calendrier complet (incluant le BO).
-
-Important: certains calendriers iCloud peuvent être **non modifiables** (partagés/abonnés).  
-Le script sélectionne automatiquement un calendrier **writable** qui supporte `VEVENT`. Si `ICLOUD_CALENDAR_NAME` pointe vers
-un calendrier non writable, il affichera un warning (ou échouera si aucun calendrier writable n'est disponible).
-
-## Exécution locale
-
-Prérequis : **Node.js 20+**
+## Développement
 
 ```bash
 npm ci
-npx playwright install chromium
+npm test            # tests unitaires (données simulées)
+npm run typecheck
 
-export ICLOUD_USERNAME="..."
-export ICLOUD_APP_PASSWORD="..."
-export TEAM_NAME="MDR"
-
-npm run start
+# Essai réel sans écrire sur iCloud
+ICLOUD_USERNAME=… ICLOUD_APP_PASSWORD=… DRY_RUN=true DEBUG=true npm run sync
 ```
-
-## GitHub Actions (planification midi Europe/Paris)
-
-Le workflow `.github/workflows/sync.yml` est planifié à **10:00 UTC** (soit **midi Europe/Paris en été**).
-En hiver, l’exécution sera à **11:00 Europe/Paris**. Le script ne bloque plus sur l’heure, donc une exécution manuelle fonctionne à tout moment.
-
-Pour tester manuellement à n’importe quelle heure, lance le workflow via **Run workflow** (optionnel : `dry_run: true`).
-
-## Notifications
-
-**Notifications iOS/iCloud** : Les événements créés/modifiés via CalDAV externe (comme ce script) ne déclenchent **pas toujours** des notifications push iOS. C'est une limitation connue d'iOS/iCloud.
-
-**Notifications push (recommandé)** : Le script supporte plusieurs backends de notifications pour te prévenir quand des événements sont créés/modifiés :
-
-### Telegram Bot (recommandé, gratuit et simple)
-
-1. Créer un bot Telegram :
-   - Ouvrir Telegram et chercher `@BotFather`
-   - Envoyer `/newbot` et suivre les instructions
-   - Récupérer le **token du bot** (ex: `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
-2. Obtenir ton `chat_id` :
-   - Envoyer un message à ton bot
-   - Visiter `https://api.telegram.org/bot<TOKEN>/getUpdates`
-   - Chercher `"chat":{"id":123456789}` → c'est ton `chat_id`
-3. Ajouter les secrets GitHub :
-   - `NOTIFY_BACKEND`: `telegram`
-   - `NOTIFY_TELEGRAM_BOT_TOKEN`: le token du bot
-   - `NOTIFY_TELEGRAM_CHAT_ID`: ton chat_id
-
-### Discord Webhook
-
-1. Discord → serveur → `Paramètres` → `Intégrations` → `Webhooks` → `Nouveau webhook`
-2. Copier l'URL du webhook
-3. Ajouter les secrets GitHub :
-   - `NOTIFY_BACKEND`: `discord`
-   - `NOTIFY_DISCORD_WEBHOOK_URL`: l'URL du webhook
-
-### Pushover (payant, 5$ one-time, très fiable)
-
-1. Créer un compte sur [pushover.net](https://pushover.net)
-2. Récupérer ton **User Key** depuis le dashboard
-3. Créer une application → récupérer l'**API Token**
-4. Ajouter les secrets GitHub :
-   - `NOTIFY_BACKEND`: `pushover`
-   - `NOTIFY_PUSHOVER_API_TOKEN`: l'API token
-   - `NOTIFY_PUSHOVER_USER_KEY`: ton User Key
-
-### Pushcut (iOS Shortcuts — recommandé pour iOS)
-
-**Pushcut** permet d'envoyer des notifications push iOS qui déclenchent automatiquement des **Shortcuts iOS**.
-
-1. Installer l'app **Pushcut** sur iOS ([App Store](https://apps.apple.com/app/pushcut/id1450936447))
-2. Dans Pushcut :
-   - Créer une **Notification** (ou utiliser une existante)
-   - Configurer l'action : **"Run Shortcut"** → sélectionner ton Shortcut iOS
-   - Récupérer la **Notification Key** (ex: `abc123xyz`)
-3. Récupérer ton **API Key** :
-   - Pushcut → `Settings` → `API Keys` → `Create API Key`
-4. Ajouter les secrets GitHub :
-   - `NOTIFY_BACKEND`: `pushcut`
-   - `NOTIFY_PUSHCUT_API_KEY`: ton API key
-   - `NOTIFY_PUSHCUT_NOTIFICATION_KEY`: la notification key
-
-**Créer le Shortcut iOS** :
-- Ouvrir l'app **Shortcuts** sur iOS
-- Créer un nouveau Shortcut
-- Ajouter des actions (ex: `Afficher une notification`, `Lire un texte`, etc.)
-- Le Shortcut sera automatiquement déclenché quand la notification Pushcut arrive
-
-**Alternative : Webhook générique** (pour services tiers comme IFTTT, Zapier, etc.)
-
-Si tu utilises **IFTTT**, **Zapier**, ou un autre service qui peut déclencher des Shortcuts iOS :
-1. Configurer un webhook dans ton service
-2. Ajouter les secrets GitHub :
-   - `NOTIFY_BACKEND`: `webhook`
-   - `NOTIFY_WEBHOOK_URL`: l'URL du webhook
-
-### Désactiver les notifications
-
-- `NOTIFY_BACKEND`: `none` (ou ne pas définir la variable)
-
-**Notifications GitHub Actions** : GitHub envoie automatiquement des **emails en cas d'échec** du workflow. Le workflow affiche aussi un résumé dans l'onglet "Actions" de GitHub après chaque exécution.
-
-## Dépannage
-
-- Si aucun match n'est créé alors que vous en voyez sur le site, c'est généralement un problème de scraping (structure du site modifiée).
-  - Dans ce cas, ouvrez une issue et joignez la sortie des logs GitHub Actions.
-- Si la connexion iCloud échoue : vérifiez le **mot de passe d'app** et que CalDAV est autorisé sur le compte.
-- **Le workflow ne se lance pas automatiquement** : Vérifiez que le workflow est activé dans `Actions` → `Workflows` → `Sync MDR matches to iCloud (CalDAV)`

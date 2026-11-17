@@ -1,5 +1,20 @@
-import { chromium, type Browser, type Page } from "playwright";
-import type { ScrapedMatch } from "./types.js";
+/**
+ * Source de SECOURS : scraping de valorantesports.com avec un vrai navigateur (Playwright).
+ * Utilisée uniquement si l'API officielle échoue. Code repris de la v1.
+ */
+import type { Browser, Page } from "playwright";
+import type { Match } from "../model.js";
+import { norm } from "../model.js";
+import crypto from "node:crypto";
+
+type ScrapedMatch = {
+  teamName: string;
+  opponentName: string;
+  tournamentName: string;
+  bestOf?: string;
+  startUtcIso: string;
+  sourceUrl: string;
+};
 
 const BASE_URL = "https://valorantesports.com/fr-FR/";
 
@@ -51,7 +66,7 @@ async function ensurePlanningView(page: Page): Promise<void> {
 
   // IMPORTANT: même si les <time> existent déjà, on force une interaction
   // pour faire apparaître les contrôles de navigation de date (SUIVANT/PRÉCÉDENT DATE).
-  const spoiler = page.locator("button", { hasText: /SÉRIE DE|SERIE DE|JOUER\\s+\\d|CLIQUEZ POUR AFFICHER/i }).first();
+  const spoiler = page.locator("button", { hasText: /SÉRIE DE|SERIE DE|JOUER\s+\d|CLIQUEZ POUR AFFICHER/i }).first();
   try {
     if (await spoiler.isVisible({ timeout: 1500 })) {
       await spoiler.click({ timeout: 10_000 });
@@ -147,8 +162,8 @@ async function extractDomMatches(page: Page): Promise<DomMatch[]> {
 
       const pTeams = Array.from(card.querySelectorAll("p")).filter((p) => /tt_uppercase/i.test(p.className));
       if (pTeams.length < 2) continue;
-      const leftTeam = (pTeams[0].textContent || "").replace(/\s+/g, " ").trim();
-      const rightTeam = (pTeams[pTeams.length - 1].textContent || "").replace(/\s+/g, " ").trim();
+      const leftTeam = (pTeams[0]!.textContent || "").replace(/\s+/g, " ").trim();
+      const rightTeam = (pTeams[pTeams.length - 1]!.textContent || "").replace(/\s+/g, " ").trim();
 
       // Tournoi/stage au centre du footer (contient souvent "•")
       const footerTextCandidates = Array.from(card.querySelectorAll("footer p"))
@@ -188,6 +203,7 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
     const debugEnabled = process.env.DEBUG_SCRAPE === "1" || process.env.DEBUG_SCRAPE === "true";
     const teamLower = params.teamName.trim().toLowerCase();
 
+    const { chromium } = await import("playwright");
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
       locale: "fr-FR",
@@ -277,3 +293,24 @@ export async function scrapeMdrMatches(params: { teamName: string }): Promise<Sc
 }
 
 
+
+/** Adapte le résultat du scraping au modèle commun. */
+export async function scrapeMatches(params: { teamName: string }): Promise<Match[]> {
+  const raw = await scrapeMdrMatches(params);
+  return raw.map((m) => {
+    const [league, ...rest] = m.tournamentName.split("•").map((x) => x.trim());
+    const bo = Number(m.bestOf?.replace(/\D/g, ""));
+    const id = "s-" + crypto.createHash("sha256").update(`${m.startUtcIso}|${norm(m.opponentName)}|${norm(m.tournamentName)}`).digest("hex").slice(0, 16);
+    return {
+      id,
+      source: "scrape" as const,
+      startUtcIso: m.startUtcIso,
+      status: new Date(m.startUtcIso).getTime() > Date.now() ? ("upcoming" as const) : ("live" as const),
+      bestOf: Number.isFinite(bo) && bo > 0 ? bo : undefined,
+      league: league || m.tournamentName,
+      stage: rest.join(" • ") || undefined,
+      team: { name: m.teamName, code: m.teamName },
+      opponent: { name: m.opponentName, code: m.opponentName },
+    };
+  });
+}

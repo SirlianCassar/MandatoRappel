@@ -66,7 +66,7 @@ export function createAuthedFetch(username: string, password: string): FetchLike
   return (input: any, init?: any) => {
     const headers = new Headers(init?.headers ?? {});
     headers.set("Authorization", auth);
-    headers.set("User-Agent", "MandatoRappel/1.0 (CalDAV Sync)");
+    headers.set("User-Agent", "MandatoRappel/2.0 (CalDAV Sync)");
     return fetch(input, { ...init, headers });
   };
 }
@@ -211,37 +211,42 @@ export async function putCalendarObject(params: {
   return { etag: etag?.trim() };
 }
 
-export async function getCalendarObjectMeta(params: {
+export type CalendarObject = { url: string; etag?: string; data: string };
+
+/** Liste les événements d'une période (REPORT calendar-query), avec leur contenu iCalendar. */
+export async function listEvents(params: {
   fetchFn: FetchLike;
-  objectUrl: string;
-}): Promise<{ exists: boolean; etag?: string }> {
-  // iCloud est capricieux sur HEAD/GET (peut renvoyer 400).
-  // La manière CalDAV canonique: PROPFIND Depth:0 sur l'objet pour lire getetag.
-  const res = await params.fetchFn(params.objectUrl, {
-    method: "PROPFIND",
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      Depth: "0",
-    },
+  calendarUrl: string;
+  fromUtcIso: string;
+  toUtcIso: string;
+}): Promise<CalendarObject[]> {
+  const fmt = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const res = await params.fetchFn(params.calendarUrl, {
+    method: "REPORT",
+    headers: { "Content-Type": "application/xml; charset=utf-8", Depth: "1" },
     body: `<?xml version="1.0" encoding="UTF-8"?>
-<D:propfind xmlns:D="DAV:">
-  <D:prop>
-    <D:getetag/>
-  </D:prop>
-</D:propfind>`,
+<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:prop><D:getetag/><C:calendar-data/></D:prop>
+  <C:filter>
+    <C:comp-filter name="VCALENDAR">
+      <C:comp-filter name="VEVENT">
+        <C:time-range start="${fmt(params.fromUtcIso)}" end="${fmt(params.toUtcIso)}"/>
+      </C:comp-filter>
+    </C:comp-filter>
+  </C:filter>
+</C:calendar-query>`,
   });
-
   const text = await res.text().catch(() => "");
-  if (res.status === 404) return { exists: false };
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText} on ${params.objectUrl}\n${text}`);
-  }
-
+  if (!res.ok) throw new Error(`REPORT ${params.calendarUrl} -> ${res.status}\n${text.slice(0, 500)}`);
   const xml = parser.parse(text);
-  const response = asArray(xml?.multistatus?.response)?.[0];
-  const prop = asArray(response?.propstat)?.[0]?.prop ?? response?.propstat?.prop;
-  const etag = prop?.getetag;
-  return { exists: true, etag: typeof etag === "string" ? etag.trim() : undefined };
+  return asArray(xml?.multistatus?.response)
+    .map((r: any) => {
+      const prop = asArray(r?.propstat)?.[0]?.prop ?? r?.propstat?.prop;
+      const data = prop?.["calendar-data"];
+      const raw = typeof data === "string" ? data : typeof data?.["#text"] === "string" ? data["#text"] : "";
+      return { url: resolveHref(params.calendarUrl, String(r?.href ?? "")), etag: prop?.getetag, data: raw };
+    })
+    .filter((o: CalendarObject) => o.data.length > 0);
 }
 
 export async function deleteCalendarObject(params: {
