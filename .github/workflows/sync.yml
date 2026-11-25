@@ -1,0 +1,125 @@
+name: Sync MDR → iCloud
+
+on:
+  schedule:
+    # Toutes les heures de 7h à 23h (heure de Paris, été comme hiver)
+    - cron: "17 5-22 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Essai à blanc (rien n'est écrit sur iCloud ni dans l'état)"
+        type: boolean
+        default: false
+      test_notification:
+        description: "Envoyer seulement une notification de test"
+        type: boolean
+        default: false
+      debug:
+        description: "Logs détaillés"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-mdr
+  cancel-in-progress: false
+
+env:
+  TZ: Europe/Paris
+  ICLOUD_USERNAME: ${{ secrets.ICLOUD_USERNAME }}
+  ICLOUD_APP_PASSWORD: ${{ secrets.ICLOUD_APP_PASSWORD }}
+  ICLOUD_CALENDAR_NAME: ${{ vars.ICLOUD_CALENDAR_NAME || 'Matchs Mandatory' }}
+  TEAM_NAME: ${{ vars.TEAM_NAME }}
+  TEAM_ALIASES: ${{ vars.TEAM_ALIASES }}
+  LEAGUES: ${{ vars.LEAGUES }}
+  LEAGUE_IDS: ${{ vars.LEAGUE_IDS }}
+  STREAM_URL: ${{ vars.STREAM_URL }}
+  NOTIFY_RESULTS: ${{ vars.NOTIFY_RESULTS }}
+  NOTIFY_BACKENDS: ${{ vars.NOTIFY_BACKENDS }}
+  NOTIFY_NTFY_TOPIC: ${{ secrets.NOTIFY_NTFY_TOPIC }}
+  NOTIFY_NTFY_SERVER: ${{ vars.NOTIFY_NTFY_SERVER }}
+  NOTIFY_NTFY_TOKEN: ${{ secrets.NOTIFY_NTFY_TOKEN }}
+  NOTIFY_PUSHCUT_API_KEY: ${{ secrets.NOTIFY_PUSHCUT_API_KEY }}
+  NOTIFY_PUSHCUT_NOTIFICATION_KEY: ${{ secrets.NOTIFY_PUSHCUT_NOTIFICATION_KEY }}
+  NOTIFY_PUSHOVER_API_TOKEN: ${{ secrets.NOTIFY_PUSHOVER_API_TOKEN }}
+  NOTIFY_PUSHOVER_USER_KEY: ${{ secrets.NOTIFY_PUSHOVER_USER_KEY }}
+  NOTIFY_TELEGRAM_BOT_TOKEN: ${{ secrets.NOTIFY_TELEGRAM_BOT_TOKEN }}
+  NOTIFY_TELEGRAM_CHAT_ID: ${{ secrets.NOTIFY_TELEGRAM_CHAT_ID }}
+  NOTIFY_DISCORD_WEBHOOK_URL: ${{ secrets.NOTIFY_DISCORD_WEBHOOK_URL }}
+  NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+  RIOT_ESPORTS_API_BASE: ${{ vars.RIOT_ESPORTS_API_BASE }}
+  RIOT_ESPORTS_API_KEY: ${{ vars.RIOT_ESPORTS_API_KEY }}
+  DRY_RUN: ${{ inputs.dry_run && 'true' || '' }}
+  DEBUG: ${{ inputs.debug && 'true' || '' }}
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Récupérer l'état (branche state)
+        run: |
+          mkdir -p data
+          if git ls-remote --exit-code --heads origin state >/dev/null 2>&1; then
+            git fetch --depth 1 origin state
+            git --work-tree=data checkout FETCH_HEAD -- . || true
+            git reset -q
+          fi
+          ls -la data
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Notification de test
+        if: inputs.test_notification
+        run: npm run notify:test
+
+      - name: Synchronisation (API officielle)
+        id: sync
+        if: ${{ !inputs.test_notification }}
+        env:
+          FALLBACK_MODE: defer
+        run: npm run sync
+
+      - name: Installer Chromium (secours)
+        if: steps.sync.outputs.needs_fallback == 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Synchronisation (scraping de secours)
+        id: fallback
+        if: steps.sync.outputs.needs_fallback == 'true'
+        env:
+          SOURCE: scrape
+          FALLBACK_REASON: ${{ steps.sync.outputs.fallback_reason }}
+        run: npm run sync
+
+      - name: Sauvegarder l'état (branche state)
+        if: ${{ always() && !inputs.test_notification && !inputs.dry_run && hashFiles('data/state.json') != '' }}
+        run: |
+          cd data
+          git init -q -b state
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "$(git -C .. remote get-url origin)"
+          git -c http.extraheader="$(git -C .. config --get http.https://github.com/.extraheader)" fetch -q --depth 1 origin state 2>/dev/null || true
+          git add -A
+          if git rev-parse -q --verify FETCH_HEAD >/dev/null && git diff --quiet --cached FETCH_HEAD; then
+            echo "État inchangé."
+            exit 0
+          fi
+          git commit -qm "État de la synchronisation"
+          git -c http.extraheader="$(git -C .. config --get http.https://github.com/.extraheader)" push -f origin state
+          echo "État sauvegardé."
+
+      - name: Alerte si échec non signalé
+        if: ${{ failure() && steps.sync.outputs.failure_notified != 'true' && steps.fallback.outputs.failure_notified != 'true' && env.NOTIFY_BACKENDS != '' }}
+        run: npm run notify:failure || true
