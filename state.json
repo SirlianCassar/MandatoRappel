@@ -1,0 +1,9 @@
+{
+  "events": {},
+  "health": {
+    "consecutiveFailures": 6,
+    "lastFailureNotifiedDay": "2026-11-28",
+    "lastFallbackNotifiedDay": "2026-11-27"
+  },
+  "version": 2
+}
